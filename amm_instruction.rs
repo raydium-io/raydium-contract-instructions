@@ -9,6 +9,7 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
     program_pack::Pack,
+    sysvar,
 };
 use std::convert::TryInto;
 use std::mem::size_of;
@@ -17,31 +18,6 @@ use arrayref::{array_ref};
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct InitializeInstruction {
-    /// nonce used to create valid program address
-    pub nonce: u8,
-    /// max order count
-    pub order_num: u8,
-    /// within this range, 5 => 5% range
-    pub depth: u8,
-    /// 1->1000000
-    pub min_size: u32,
-    /// 1->1000000
-    pub vol_max_cut_ratio: u32,
-    /// 1->1000000
-    pub amount_wave: u64,
-    /// min_cur_price: (2 * amm.order_num * amm.pc_lot_size) * min_price_multiplier
-    pub min_price_multiplier: u64,
-    /// max_cur_price: (2 * amm.order_num * amm.pc_lot_size) * max_price_multiplier
-    pub max_price_multiplier: u64,
-    /// system decimal value, used to normalize the value of coin and pc amount
-    pub sys_decimal_value: u64,
-    /// All fee information
-    pub fees: Fees,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct Initialize2Instruction {
     /// nonce used to create valid program address
     pub nonce: u8,
 }
@@ -143,7 +119,7 @@ pub enum AmmInstruction {
     ///   13. `[writable]` event_q Account
     ///   14. `[writable]` bids Account
     ///   15. `[writable]` asks Account
-    Initialize2(Initialize2Instruction),
+    Initialize2,
 
     ///   MonitorStep. To monitor state turn around step by step.
     ///
@@ -294,38 +270,11 @@ impl AmmInstruction {
         let (&tag, rest) = input.split_first().ok_or(AmmError::InvalidInstruction)?;
         Ok(match tag {
             0 => {
-                let (nonce, rest) = Self::unpack_u8(rest)?;
-                let (order_num, rest) = Self::unpack_u8(rest)?;
-                let (depth, rest) = Self::unpack_u8(rest)?;
-                let (min_size, rest) = Self::unpack_u32(rest)?;
-                let (vol_max_cut_ratio, rest) = Self::unpack_u32(rest)?;
-                let (amount_wave, rest) = Self::unpack_u64(rest)?;
-                let (min_price_multiplier, rest) = Self::unpack_u64(rest)?;
-                let (max_price_multiplier, rest) = Self::unpack_u64(rest)?;
-                let (sys_decimal_value, rest) = Self::unpack_u64(rest)?;
-                if rest.len() >= Fees::LEN {
-                    let (fees, _rest) = rest.split_at(Fees::LEN);
-                    let fees = Fees::unpack_unchecked(fees)?;
-                    Self::Initialize(InitializeInstruction{
-                            nonce,
-                            order_num,
-                            depth,
-                            min_size,
-                            vol_max_cut_ratio,
-                            amount_wave,
-                            min_price_multiplier,
-                            max_price_multiplier,
-                            sys_decimal_value,
-                            fees,
-                        })
-                }
-                else {
-                    return Err(AmmError::InvalidInstruction.into());
-                }
+                let (nonce, _rest) = Self::unpack_u8(rest)?;
+                Self::Initialize(InitializeInstruction{ nonce })
             }
             1 => {
-                let (nonce, _rest) = Self::unpack_u8(rest)?;
-                Self::Initialize2(Initialize2Instruction{ nonce })
+                Self::Initialize2
             }
             2 => {
                 let (plan_order_limit, rest) = Self::unpack_u16(rest)?;
@@ -424,20 +373,6 @@ impl AmmInstruction {
         }
     }
 
-    fn unpack_u32(input: &[u8]) -> Result<(u32, &[u8]), ProgramError> {
-        if input.len() >= 4 {
-            let (amount, rest) = input.split_at(4);
-            let amount = amount
-                .get(..4)
-                .and_then(|slice| slice.try_into().ok())
-                .map(u32::from_le_bytes)
-                .ok_or(AmmError::InvalidInstruction)?;
-            Ok((amount, rest))
-        } else {
-            Err(AmmError::InvalidInstruction.into())
-        }
-    }
-
     fn unpack_u64(input: &[u8]) -> Result<(u64, &[u8]), ProgramError> {
         if input.len() >= 8 {
             let (amount, rest) = input.split_at(8);
@@ -457,36 +392,13 @@ impl AmmInstruction {
         let mut buf = Vec::with_capacity(size_of::<Self>());
         match &*self {
             Self::Initialize(
-                InitializeInstruction {
-                    nonce,
-                    order_num,
-                    depth,
-                    min_size,
-                    vol_max_cut_ratio,
-                    amount_wave,
-                    min_price_multiplier,
-                    max_price_multiplier,
-                    sys_decimal_value,
-                    fees,
-                }
+                InitializeInstruction { nonce }
             ) => {
                 buf.push(0);
                 buf.push(*nonce);
-                buf.push(*order_num);
-                buf.push(*depth);
-                buf.extend_from_slice(&min_size.to_le_bytes());
-                buf.extend_from_slice(&vol_max_cut_ratio.to_le_bytes());
-                buf.extend_from_slice(&amount_wave.to_le_bytes());
-                buf.extend_from_slice(&min_price_multiplier.to_le_bytes());
-                buf.extend_from_slice(&max_price_multiplier.to_le_bytes());
-                buf.extend_from_slice(&sys_decimal_value.to_le_bytes());
-                let mut fees_slice = [0u8; Fees::LEN];
-                Pack::pack_into_slice(fees, &mut fees_slice[..]);
-                buf.extend_from_slice(&fees_slice);
             }
-            Self::Initialize2(Initialize2Instruction{ nonce }) => {
+            Self::Initialize2 => {
                 buf.push(1);
-                buf.push(*nonce);
             }
             Self::MonitorStep(MonitorStepInstruction{ plan_order_limit, place_order_limit, cancel_order_limit }) => {
                 buf.push(2);
@@ -557,7 +469,6 @@ impl AmmInstruction {
 /// Creates an 'initialize' instruction.
 pub fn initialize(
     program_id: &Pubkey,
-    spl_token_program_id: &Pubkey,
     amm_id: &Pubkey,
     amm_authority: &Pubkey,
     amm_open_orders: &Pubkey,
@@ -571,39 +482,21 @@ pub fn initialize(
     pool_temp_lp_token_account: &Pubkey,
     serum_program_id: &Pubkey,
     serum_market: &Pubkey,
+    user_wallet: &Pubkey,
 
     nonce: u8,
-    order_num: u8,
-    depth: u8,
-    min_size:u32,
-    vol_max_cut_ratio: u32,
-    amount_wave: u64,
-    min_price_multiplier: u64,
-    max_price_multiplier: u64,
-    sys_decimal_value: u64,
-    fees: Fees,
 ) -> Result<Instruction, ProgramError> {
     let init_data = AmmInstruction::Initialize(
-        InitializeInstruction{
-            nonce,
-            order_num,
-            depth,
-            min_size,
-            vol_max_cut_ratio,
-            amount_wave,
-            min_price_multiplier,
-            max_price_multiplier,
-            sys_decimal_value,
-            fees
-        }
-    );
+        InitializeInstruction{ nonce });
     let data = init_data.pack()?;
 
     let accounts = vec![
         // spl token
-        AccountMeta::new_readonly(*spl_token_program_id, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
         // amm
-        AccountMeta::new(*amm_id, true),
+        AccountMeta::new(*amm_id, false),
         AccountMeta::new_readonly(*amm_authority, false),
         AccountMeta::new_readonly(*amm_open_orders, false),
         AccountMeta::new(*lp_mint_address, false),
@@ -617,6 +510,8 @@ pub fn initialize(
         // serum
         AccountMeta::new_readonly(*serum_program_id, false),
         AccountMeta::new_readonly(*serum_market, false),
+        // user wallet
+        AccountMeta::new(*user_wallet, true),
     ];
 
     Ok(Instruction {
@@ -629,8 +524,6 @@ pub fn initialize(
 /// Creates an 'initialize2' instruction.
 pub fn initialize2(
     program_id: &Pubkey,
-    spl_token_program_id: &Pubkey,
-    spl_rent_id: &Pubkey,
     amm_id: &Pubkey,
     amm_authority: &Pubkey,
     amm_open_orders: &Pubkey,
@@ -646,18 +539,16 @@ pub fn initialize2(
     serum_event_q: &Pubkey,
     serum_bids: &Pubkey,
     serum_asks: &Pubkey,
-
-    nonce: u8,
 ) -> Result<Instruction, ProgramError> {
-    let init_data = AmmInstruction::Initialize2(Initialize2Instruction{ nonce });
+    let init_data = AmmInstruction::Initialize2;
     let data = init_data.pack()?;
 
     let mut accounts = vec![
         // spl
-        AccountMeta::new_readonly(*spl_token_program_id, false),
-        AccountMeta::new_readonly(*spl_rent_id, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
         // amm
-        AccountMeta::new(*amm_id, true),
+        AccountMeta::new(*amm_id, false),
         AccountMeta::new_readonly(*amm_authority, false),
         AccountMeta::new(*amm_open_orders, false),
         AccountMeta::new(*pool_coin_token_account, false),
@@ -688,7 +579,6 @@ pub fn initialize2(
 /// Creates a 'deposit' instruction.
 pub fn deposit(
     program_id: &Pubkey,
-    spl_token_program_id: &Pubkey,
     amm_id: &Pubkey,
     amm_authority: &Pubkey,
     amm_open_orders: &Pubkey,
@@ -710,7 +600,7 @@ pub fn deposit(
 
     let accounts = vec![
         // spl token
-        AccountMeta::new_readonly(*spl_token_program_id, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
         // amm
         AccountMeta::new(*amm_id, false),
         AccountMeta::new_readonly(*amm_authority, false),
@@ -738,7 +628,6 @@ pub fn deposit(
 /// Creates a 'withdraw' instruction.
 pub fn withdraw(
     program_id: &Pubkey,
-    spl_token_program_id: &Pubkey,
     amm_id: &Pubkey,
     amm_authority: &Pubkey,
     amm_open_orders: &Pubkey,
@@ -764,7 +653,7 @@ pub fn withdraw(
 
     let accounts = vec![
         // spl token
-        AccountMeta::new_readonly(*spl_token_program_id, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
         // amm
         AccountMeta::new(*amm_id, false),
         AccountMeta::new_readonly(*amm_authority, false),
@@ -798,7 +687,6 @@ pub fn withdraw(
 /// Creates a 'swap' instruction.
 pub fn swap(
     program_id: &Pubkey,
-    spl_token_program_id: &Pubkey,
     amm_id: &Pubkey,
     amm_authority: &Pubkey,
     amm_open_orders: &Pubkey,
@@ -824,7 +712,7 @@ pub fn swap(
 
     let accounts = vec![
         // spl token
-        AccountMeta::new_readonly(*spl_token_program_id, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
         // amm
         AccountMeta::new(*amm_id, false),
         AccountMeta::new_readonly(*amm_authority, false),
@@ -857,7 +745,6 @@ pub fn swap(
 /// Creates a 'withdraw_transfer' instruction.
 pub fn withdraw_transfer(
     program_id: &Pubkey,
-    spl_token_program_id: &Pubkey,
     amm_id: &Pubkey,
     amm_authority: &Pubkey,
     amm_open_orders: &Pubkey,
@@ -878,7 +765,7 @@ pub fn withdraw_transfer(
 
     let mut accounts = vec![
         // spl token
-        AccountMeta::new_readonly(*spl_token_program_id, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
         // amm
         AccountMeta::new(*amm_id, false),
         AccountMeta::new_readonly(*amm_authority, false),
@@ -911,7 +798,6 @@ pub fn withdraw_transfer(
 /// Creates a 'withdrawpnl' instruction
 pub fn withdrawpnl(
     program_id: &Pubkey,
-    spl_token_program_id: &Pubkey,
     amm_id: &Pubkey,
     amm_authority: &Pubkey,
     amm_open_orders: &Pubkey,
@@ -931,7 +817,7 @@ pub fn withdrawpnl(
 
     let accounts = vec![
         // spl token
-        AccountMeta::new_readonly(*spl_token_program_id, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
         // amm
         AccountMeta::new(*amm_id, false),
         AccountMeta::new_readonly(*amm_authority, false),
@@ -966,6 +852,8 @@ pub fn set_params(
     param: u8,
     value: Option<u64>,
     new_pubkey: Option<Pubkey>,
+    amm_open_order_account: &Pubkey,
+    amm_target_order_account: &Pubkey,
     fees: Option<Fees>
 ) -> Result<Instruction, ProgramError> {
     let data = AmmInstruction::SetParams(SetParamsInstruction{param, value, new_pubkey, fees}).pack()?;
@@ -978,6 +866,10 @@ pub fn set_params(
     if let Some(key) = new_pubkey {
         accounts.push(AccountMeta::new_readonly(key, false))
     }
+    if param == 12 {
+        accounts.push(AccountMeta::new_readonly(*amm_open_order_account, false));
+        accounts.push(AccountMeta::new(*amm_target_order_account, false));
+    }
     Ok(Instruction {
         program_id: *program_id,
         accounts,
@@ -988,9 +880,6 @@ pub fn set_params(
 /// Creates a 'monitor_step' instruction.
 pub fn monitor_step(
     program_id: &Pubkey,
-    spl_token_program_id: &Pubkey,
-    spl_rent_id: &Pubkey,
-    clock_id: &Pubkey,
     amm_id: &Pubkey,
     amm_authority: &Pubkey,
     amm_open_orders: &Pubkey,
@@ -1017,9 +906,9 @@ pub fn monitor_step(
 
     let mut accounts = vec![
         // spl
-        AccountMeta::new_readonly(*spl_token_program_id, false),
-        AccountMeta::new_readonly(*spl_rent_id, false),
-        AccountMeta::new_readonly(*clock_id, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+        AccountMeta::new_readonly(sysvar::clock::id(), false),
         // amm
         AccountMeta::new(*amm_id, false),
         AccountMeta::new_readonly(*amm_authority, false),
@@ -1054,7 +943,6 @@ pub fn monitor_step(
 /// Creates a 'withdrawsrm' instruction
 pub fn withdrawsrm(
     program_id: &Pubkey,
-    spl_token_program_id: &Pubkey,
     amm_id: &Pubkey,
     amm_authority: &Pubkey,
     amm_owner_account: &Pubkey,
@@ -1066,7 +954,7 @@ pub fn withdrawsrm(
 
     let accounts = vec![
         // spl token
-        AccountMeta::new_readonly(*spl_token_program_id, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
         // amm
         AccountMeta::new_readonly(*amm_id, false),
         AccountMeta::new_readonly(*amm_owner_account, true),
