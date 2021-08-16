@@ -262,6 +262,8 @@ pub enum AmmInstruction {
     ///   16. `[writable]` user destination token Account. user Account to swap to.
     ///   17. `[singer]` user owner Account
     Swap(SwapInstruction),
+
+    PreInitialize(InitializeInstruction),
 }
 
 impl AmmInstruction {
@@ -340,6 +342,10 @@ impl AmmInstruction {
                 let (amount_in, rest) = Self::unpack_u64(rest)?;
                 let (minimum_amount_out, _rest) = Self::unpack_u64(rest)?;
                 Self::Swap(SwapInstruction{amount_in, minimum_amount_out})
+            }
+            10 => {
+                let (nonce, _rest) = Self::unpack_u8(rest)?;
+                Self::PreInitialize(InitializeInstruction{ nonce })
             }
             _ => return Err(AmmError::InvalidInstruction.into()),
         })
@@ -461,9 +467,64 @@ impl AmmInstruction {
                 buf.extend_from_slice(&amount_in.to_le_bytes());
                 buf.extend_from_slice(&minimum_amount_out.to_le_bytes());
             }
+            Self::PreInitialize(
+                InitializeInstruction { nonce }
+            ) => {
+                buf.push(10);
+                buf.push(*nonce);
+            }
         }
         Ok(buf)
     }
+}
+
+/// Creates an 'preinitialize' instruction.
+pub fn pre_initialize(
+    program_id: &Pubkey,
+    amm_target_orders: &Pubkey,
+    pool_withdraw_queue: &Pubkey,
+    amm_authority: &Pubkey,
+    lp_mint_address: &Pubkey,
+    coin_mint_address: &Pubkey,
+    pc_mint_address: &Pubkey,
+    pool_coin_token_account: &Pubkey,
+    pool_pc_token_account: &Pubkey,
+    pool_temp_lp_token_account: &Pubkey,
+    serum_market: &Pubkey,
+    user_wallet: &Pubkey,
+
+    nonce: u8,
+) -> Result<Instruction, ProgramError> {
+    let init_data = AmmInstruction::PreInitialize(
+        InitializeInstruction{ nonce });
+    let data = init_data.pack()?;
+
+    let accounts = vec![
+        // spl token
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+        // amm account
+        AccountMeta::new(*amm_target_orders, false),
+        AccountMeta::new(*pool_withdraw_queue, false),
+        AccountMeta::new_readonly(*amm_authority, false),
+        AccountMeta::new(*lp_mint_address, false),
+        AccountMeta::new_readonly(*coin_mint_address, false),
+        AccountMeta::new_readonly(*pc_mint_address, false),
+        AccountMeta::new(*pool_coin_token_account, false),
+        AccountMeta::new(*pool_pc_token_account, false),
+        AccountMeta::new(*pool_temp_lp_token_account, false),
+        // serum
+        AccountMeta::new_readonly(*serum_market, false),
+        // user wallet
+        AccountMeta::new(*user_wallet, true),
+    ];
+
+    Ok(Instruction {
+        program_id: *program_id,
+        accounts,
+        data,
+    })
 }
 
 /// Creates an 'initialize' instruction.
