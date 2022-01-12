@@ -1,7 +1,8 @@
 [package]
-name = "raydium-source"
+name = "raydium-contract-instructions"
 version = "0.1.0"
 edition = "2021"
+
 
 [dependencies]
 solana-sdk = "1.9.4"
