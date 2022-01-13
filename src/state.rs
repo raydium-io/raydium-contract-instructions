@@ -41,7 +41,9 @@ pub struct LiquidityStateLayoutV4 {
     pub swap_base_out_amount: u128,
     pub swap_quote2_base_fee: u64,
     // amm vault
+    /// base spl token account
     pub base_vault: Pubkey,
+    /// quite spl token account
     pub quote_vault: Pubkey,
     // mint
     pub base_mint: Pubkey,
