@@ -8,6 +8,7 @@ pub struct LiquidityStateLayoutV4 {
     pub nonce: u64,
     pub max_order: u64,
     pub depth: u64,
+    /// minimal decimal step amid orders in relation to decimals of relevant mint
     pub base_decimal: u64,
     pub quote_decimal: u64,
     pub state: u64,
