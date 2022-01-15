@@ -52,7 +52,9 @@ pub struct LiquidityStateLayoutV4 {
     pub quote_mint: Pubkey,
     pub lp_mint: Pubkey,
     // market
+    /// orders on market done by this pool
     pub open_orders: Pubkey,
+    /// usually order book, usually serum
     pub market_id: Pubkey,
     pub market_program_id: Pubkey,
     pub target_orders: Pubkey,
