@@ -1,3 +1,3 @@
 # Overview 
 
-Rust API to Ryadium on chain contracts
+Rust API to Raydium on chain contracts
