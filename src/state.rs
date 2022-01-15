@@ -13,6 +13,7 @@ pub struct LiquidityStateLayoutV4 {
     pub quote_decimal: u64,
     pub state: u64,
     pub reset_flag: u64,
+    /// min size of trade in quote
     pub min_size: u64,
     pub vol_max_cut_ratio: u64,
     pub amount_wave_ratio: u64,
