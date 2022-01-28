@@ -2,19 +2,17 @@
 
 use crate::error::AmmError;
 use solana_program::{
+    account_info::AccountInfo,
     entrypoint::ProgramResult,
     program_error::ProgramError,
-    pubkey::Pubkey,
-    account_info::AccountInfo,
     program_pack::{IsInitialized, Pack, Sealed},
+    pubkey::Pubkey,
 };
 
-use safe_transmute::{self, trivial::TriviallyTransmutable};
-use bytemuck::{
-     Pod, Zeroable, cast_slice_mut, from_bytes_mut,
-};
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
-use std::{cell::RefMut};
+use bytemuck::{cast_slice_mut, from_bytes_mut, Pod, Zeroable};
+use safe_transmute::{self, trivial::TriviallyTransmutable};
+use std::cell::RefMut;
 
 #[repr(u64)]
 pub enum AmmStatus {
@@ -24,7 +22,7 @@ pub enum AmmStatus {
     WithdrawOnly = 3u64,
 }
 impl AmmStatus {
-    pub fn from_u64(status: u64)->Self {
+    pub fn from_u64(status: u64) -> Self {
         match status {
             0u64 => AmmStatus::Uninitialized,
             1u64 => AmmStatus::Initialized,
@@ -34,7 +32,7 @@ impl AmmStatus {
         }
     }
 
-    pub fn into_u64(&self)->u64 {
+    pub fn into_u64(&self) -> u64 {
         match self {
             AmmStatus::Uninitialized => 0u64,
             AmmStatus::Initialized => 1u64,
@@ -44,10 +42,8 @@ impl AmmStatus {
     }
     pub fn valid_status(status: u64) -> bool {
         match status {
-            1u64 | 2u64 | 3u64 => {
-                return true
-            },
-            _ => return false
+            1u64 | 2u64 | 3u64 => return true,
+            _ => return false,
         }
     }
 }
@@ -64,7 +60,7 @@ pub enum AmmState {
     WithdrawTransferState = 7u64,
 }
 impl AmmState {
-    pub fn from_u64(state: u64)->Self {
+    pub fn from_u64(state: u64) -> Self {
         match state {
             0u64 => AmmState::InvlidState,
             1u64 => AmmState::IdleState,
@@ -78,7 +74,7 @@ impl AmmState {
         }
     }
 
-    pub fn into_u64(&self)->u64 {
+    pub fn into_u64(&self) -> u64 {
         match self {
             AmmState::InvlidState => 0u64,
             AmmState::IdleState => 1u64,
@@ -92,10 +88,8 @@ impl AmmState {
     }
     pub fn valid_state(state: u64) -> bool {
         match state {
-            0u64 | 1u64 | 2u64 | 3u64 | 4u64 | 5u64 | 6u64 | 7u64=> {
-                return true
-            },
-            _ => return false
+            0u64 | 1u64 | 2u64 | 3u64 | 4u64 | 5u64 | 6u64 | 7u64 => return true,
+            _ => return false,
         }
     }
 }
@@ -205,32 +199,32 @@ impl Pack for Fees {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct OutPutData {
-     /// delay to take pnl coin
-     pub need_take_pnl_coin: u64,
-     /// delay to take pnl pc
-     pub need_take_pnl_pc: u64,
-     /// total pnl pc
-     pub total_pnl_pc: u64,
-     /// total pnl coin
-     pub total_pnl_coin: u64,
-     /// pool total deposit pc
-     pub pool_total_deposit_pc: u128,
-     /// pool total deposit coin
-     pub pool_total_deposit_coin: u128,
+    /// delay to take pnl coin
+    pub need_take_pnl_coin: u64,
+    /// delay to take pnl pc
+    pub need_take_pnl_pc: u64,
+    /// total pnl pc
+    pub total_pnl_pc: u64,
+    /// total pnl coin
+    pub total_pnl_coin: u64,
+    /// pool total deposit pc
+    pub pool_total_deposit_pc: u128,
+    /// pool total deposit coin
+    pub pool_total_deposit_coin: u128,
 
-     /// swap coin in amount
-     pub swap_coin_in_amount: u128,
-     /// swap pc out amount
-     pub swap_pc_out_amount: u128,
-     /// swap coin to pc fee
-     pub swap_coin2pc_fee: u64,
+    /// swap coin in amount
+    pub swap_coin_in_amount: u128,
+    /// swap pc out amount
+    pub swap_pc_out_amount: u128,
+    /// swap coin to pc fee
+    pub swap_coin2pc_fee: u64,
 
-     /// swap pc in amount
-     pub swap_pc_in_amount: u128,
-     /// swap coin out amount
-     pub swap_coin_out_amount: u128,
-     /// swap pc to coin fee
-     pub swap_pc2coin_fee: u64,
+    /// swap pc in amount
+    pub swap_pc_in_amount: u128,
+    /// swap coin out amount
+    pub swap_coin_out_amount: u128,
+    /// swap pc to coin fee
+    pub swap_pc2coin_fee: u64,
 }
 
 impl OutPutData {
@@ -306,7 +300,7 @@ pub struct AmmInfo {
     /// lp mint
     pub lp_mint: Pubkey,
     /// open_orders key
-    pub open_orders:Pubkey,
+    pub open_orders: Pubkey,
     /// market key
     pub market: Pubkey,
     /// serum dex key
@@ -333,14 +327,15 @@ unsafe impl TriviallyTransmutable for AmmInfo {}
 impl AmmInfo {
     /// Helper function to get the more efficient packed size of the struct
     #[inline]
-    pub fn load_amm_mut<'a>(amm_account:&'a AccountInfo, check_status: bool) -> Result<RefMut<'a, AmmInfo>, ProgramError> {
+    pub fn load_amm_mut<'a>(
+        amm_account: &'a AccountInfo,
+        check_status: bool,
+    ) -> Result<RefMut<'a, AmmInfo>, ProgramError> {
         let account_data: RefMut<'a, [u8]>;
         let amm_data: RefMut<'a, AmmInfo>;
 
         account_data = RefMut::map(amm_account.try_borrow_mut_data()?, |data| *data);
-        amm_data = RefMut::map(account_data, |data| {
-            from_bytes_mut(cast_slice_mut(data))
-        });
+        amm_data = RefMut::map(account_data, |data| from_bytes_mut(cast_slice_mut(data)));
         if check_status {
             amm_data.check_status()?;
         }
@@ -351,8 +346,7 @@ impl AmmInfo {
     pub fn check_status(&self) -> Result<bool, ProgramError> {
         if self.status == AmmStatus::Uninitialized as u64 {
             Err(AmmError::InvalidStatus.into())
-        }
-        else {
+        } else {
             Ok(true)
         }
     }

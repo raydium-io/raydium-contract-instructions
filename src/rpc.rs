@@ -1,5 +1,6 @@
-// TODO: if not smart contract - bpf or option with rpc
-// https://github.com/raydium-io/raydium-sdk
+// TODO: #cfg if not smart contract - bpf or option with rpc
+// TODO: use https://github.com/paritytech/jsonrpc
+//! See https://github.com/raydium-io/raydium-sdk for reference
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 
@@ -26,7 +27,6 @@ pub struct Account {
     pub owner: String,
     pub rent_epoch: i64,
 }
-
 
 // SDK
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

@@ -1,4 +1,4 @@
-use borsh::{BorshSerialize, BorshDeserialize};
+use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::pubkey::Pubkey;
 
 /// See https://github.com/raydium-io/raydium-sdk/blob/master/src/liquidity/layout.ts
@@ -34,10 +34,10 @@ pub struct LiquidityStateLayoutV4 {
     pub quote_need_take_pnl: u64,
     pub quote_total_pnl: u64,
     pub base_total_pnl: u64,
-    pub quote_total_deposited:u128,
-    pub base_total_deposited:u128,
-    pub swap_base_in_amount:u128,
-    pub swap_quote_out_amount:u128,
+    pub quote_total_deposited: u128,
+    pub base_total_deposited: u128,
+    pub swap_base_in_amount: u128,
+    pub swap_quote_out_amount: u128,
     // total fee accrued
     pub swap_base2_quote_fee: u64,
     pub swap_quote_in_amount: u128,
