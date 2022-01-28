@@ -38,9 +38,11 @@ pub struct LiquidityStateLayoutV4 {
     pub base_total_deposited:u128,
     pub swap_base_in_amount:u128,
     pub swap_quote_out_amount:u128,
+    // total fee accrued
     pub swap_base2_quote_fee: u64,
     pub swap_quote_in_amount: u128,
     pub swap_base_out_amount: u128,
+    // total fee accrued
     pub swap_quote2_base_fee: u64,
     // amm vault
     /// base spl token account
