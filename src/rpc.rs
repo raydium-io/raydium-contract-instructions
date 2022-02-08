@@ -56,6 +56,7 @@ pub struct Official {
     pub version: u16,
     pub program_id: String,
     pub authority: String,
+    /// open orders on OB, likely Serum OB
     pub open_orders: String,
     pub target_orders: String,
     pub base_vault: String,

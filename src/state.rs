@@ -32,7 +32,9 @@ pub struct LiquidityStateLayoutV4 {
     pub swap_fee_denominator: u64,
     pub base_need_take_pnl: u64,
     pub quote_need_take_pnl: u64,
+    /// accrued not yet withdraw fee of quote
     pub quote_total_pnl: u64,
+    /// accrued not yet withdraw fee of base
     pub base_total_pnl: u64,
     pub quote_total_deposited: u128,
     pub base_total_deposited: u128,
