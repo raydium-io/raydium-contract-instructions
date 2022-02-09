@@ -1,0 +1,21 @@
+[package]
+name = "raydium-contract-instructions"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+solana-sdk = "1.9.4"
+solana-program = "1.9.4"
+spl-token = "3.2.0"
+arrayref = "0.3.6"
+safe-transmute = "0.11.2"
+bytemuck = "1.7.3"
+borsh = "0.9.1"
+
+# TODO: if not bpf or optional with serde 
+serde = "1.0.133"
+serde_derive = "1.0.133"
+
+[dev-dependencies]
+solana-client = "1.9.4"
