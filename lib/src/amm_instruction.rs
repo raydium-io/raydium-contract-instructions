@@ -18,6 +18,14 @@ solana_program::declare_id!("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8");
 pub struct InitializeInstruction {
     /// nonce used to create valid program address
     pub nonce: u8,
+    pub open_time: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct PreInitializeInstruction {
+    /// nonce used to create valid program address
+    pub nonce: u8,
 }
 
 #[repr(C)]
@@ -153,7 +161,7 @@ pub enum AmmInstruction {
     ///   17. `[singer]` user owner Account
     SwapBaseIn(SwapInstructionBaseIn),
 
-    PreInitialize(InitializeInstruction),
+    PreInitialize(PreInitializeInstruction),
 
     /// Swap coin or pc from pool, base amount_out with a slippage of max_amount_in
     ///
@@ -188,8 +196,9 @@ impl AmmInstruction {
             .ok_or(ProgramError::InvalidInstructionData)?;
         Ok(match tag {
             0 => {
-                let (nonce, _rest) = Self::unpack_u8(rest)?;
-                Self::Initialize(InitializeInstruction { nonce })
+                let (nonce, rest) = Self::unpack_u8(rest)?;
+                let (open_time, _rest) = Self::unpack_u64(rest)?;
+                Self::Initialize(InitializeInstruction { nonce, open_time })
             }
 
             3 => {
@@ -217,7 +226,7 @@ impl AmmInstruction {
             }
             10 => {
                 let (nonce, _rest) = Self::unpack_u8(rest)?;
-                Self::PreInitialize(InitializeInstruction { nonce })
+                Self::PreInitialize(PreInitializeInstruction { nonce })
             }
             11 => {
                 let (max_amount_in, rest) = Self::unpack_u64(rest)?;
@@ -264,9 +273,10 @@ impl AmmInstruction {
     pub fn pack(&self) -> Result<Vec<u8>, ProgramError> {
         let mut buf = Vec::with_capacity(size_of::<Self>());
         match &*self {
-            Self::Initialize(InitializeInstruction { nonce }) => {
+            Self::Initialize(InitializeInstruction { nonce, open_time }) => {
                 buf.push(0);
                 buf.push(*nonce);
+                buf.extend_from_slice(&open_time.to_le_bytes());
             }
             Self::Deposit(DepositInstruction {
                 max_coin_amount,
@@ -291,7 +301,7 @@ impl AmmInstruction {
                 buf.extend_from_slice(&amount_in.to_le_bytes());
                 buf.extend_from_slice(&minimum_amount_out.to_le_bytes());
             }
-            Self::PreInitialize(InitializeInstruction { nonce }) => {
+            Self::PreInitialize(PreInitializeInstruction { nonce }) => {
                 buf.push(10);
                 buf.push(*nonce);
             }
@@ -326,7 +336,7 @@ pub fn pre_initialize(
 
     nonce: u8,
 ) -> Result<Instruction, ProgramError> {
-    let init_data = AmmInstruction::PreInitialize(InitializeInstruction { nonce });
+    let init_data = AmmInstruction::PreInitialize(PreInitializeInstruction { nonce });
     let data = init_data.pack()?;
 
     let accounts = vec![
@@ -378,8 +388,9 @@ pub fn initialize(
     srm_token_account: Option<Pubkey>,
 
     nonce: u8,
+    open_time: u64
 ) -> Result<Instruction, ProgramError> {
-    let init_data = AmmInstruction::Initialize(InitializeInstruction { nonce });
+    let init_data = AmmInstruction::Initialize(InitializeInstruction { nonce, open_time });
     let data = init_data.pack()?;
 
     let mut accounts = vec![
