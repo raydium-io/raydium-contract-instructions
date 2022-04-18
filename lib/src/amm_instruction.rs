@@ -385,15 +385,14 @@ pub fn initialize(
     serum_program_id: &Pubkey,
     serum_market: &Pubkey,
     user_wallet: &Pubkey,
-    srm_token_account: Option<Pubkey>,
 
     nonce: u8,
-    open_time: u64
+    open_time: u64,
 ) -> Result<Instruction, ProgramError> {
     let init_data = AmmInstruction::Initialize(InitializeInstruction { nonce, open_time });
     let data = init_data.pack()?;
 
-    let mut accounts = vec![
+    let accounts = vec![
         // spl token
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
@@ -417,9 +416,6 @@ pub fn initialize(
         // user wallet
         AccountMeta::new(*user_wallet, true),
     ];
-    if let Some(srm_token_key) = srm_token_account {
-        accounts.push(AccountMeta::new(srm_token_key, false))
-    }
 
     Ok(Instruction {
         program_id: *program_id,
@@ -504,16 +500,15 @@ pub fn withdraw(
     uer_pc_token_account: &Pubkey,
     user_owner: &Pubkey,
 
-    referrer_pc_account: Option<&Pubkey>,
-    serum_event_q: Option<&Pubkey>,
-    serum_bids: Option<&Pubkey>,
-    serum_asks: Option<&Pubkey>,
-
+    serum_event_q: &Pubkey,
+    serum_bids: &Pubkey,
+    serum_asks: &Pubkey,
+    // lp amount
     amount: u64,
 ) -> Result<Instruction, ProgramError> {
     let data = AmmInstruction::Withdraw(WithdrawInstruction { amount }).pack()?;
 
-    let mut accounts = vec![
+    let accounts = vec![
         // spl token
         AccountMeta::new_readonly(spl_token::id(), false),
         // amm
@@ -537,18 +532,11 @@ pub fn withdraw(
         AccountMeta::new(*uer_coin_token_account, false),
         AccountMeta::new(*uer_pc_token_account, false),
         AccountMeta::new_readonly(*user_owner, true),
+        // serum
+        AccountMeta::new(*serum_event_q, false),
+        AccountMeta::new(*serum_bids, false),
+        AccountMeta::new(*serum_asks, false),
     ];
-
-    if let Some(referrer_pc_key) = referrer_pc_account {
-        accounts.push(AccountMeta::new(*referrer_pc_key, false));
-    }
-    if let (Some(serum_event_q_key), Some(serum_bids_key), Some(serum_asks_key)) =
-        (serum_event_q, serum_bids, serum_asks)
-    {
-        accounts.push(AccountMeta::new(*serum_event_q_key, false));
-        accounts.push(AccountMeta::new(*serum_bids_key, false));
-        accounts.push(AccountMeta::new(*serum_asks_key, false));
-    }
 
     Ok(Instruction {
         program_id: *program_id,

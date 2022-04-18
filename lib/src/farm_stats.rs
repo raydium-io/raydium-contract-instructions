@@ -10,7 +10,7 @@ pub struct FarmPool {
     pub state: u64,
     /// Nonce used in program address.
     pub nonce: u64,
-    /// lp token vault 
+    /// lp token vault
     pub lp_vault: Pubkey,
     /// reward vault a
     pub reward_vault_a: Pubkey,
@@ -34,9 +34,7 @@ pub struct FarmPool {
     pub last_pool_update_slot: u64,
     /// owner
     pub owner: Pubkey,
-
 }
-
 
 /// Information about the singe  stake account
 #[repr(C)]
@@ -82,10 +80,10 @@ pub struct FarmerInfoV2 {
 
     /// reward debt b
     pub reward_debt_b: u128,
-    
+
     /// account type
     pub account_type: u64,
 
     /// pending
-    pub pending: [u64;16],
+    pub pending: [u64; 16],
 }

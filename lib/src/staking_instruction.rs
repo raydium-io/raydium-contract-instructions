@@ -9,7 +9,6 @@ use solana_program::pubkey::Pubkey;
 use solana_program::sysvar;
 use std::mem::size_of;
 
-
 /// Inital values for the Stake Pool
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -29,7 +28,7 @@ pub enum StakePoolInstruction {
     ///   Initializes a new StakePool.
     Initialize(InitArgs),
 
-    /// Deposit lp into the pool. 
+    /// Deposit lp into the pool.
     Deposit(u64),
 
     /// Withdraw lp token from the pool .
@@ -246,7 +245,6 @@ pub fn withdraw(
         AccountMeta::new(*vault_reward_token, false),
         AccountMeta::new_readonly(sysvar::clock::id(), false),
         AccountMeta::new_readonly(*token_program_id, false),
-
     ];
     Ok(Instruction {
         program_id: *program_id,
@@ -276,7 +274,6 @@ pub fn emergency_withdraw(
         AccountMeta::new(*dest_lp_token, false),
         AccountMeta::new(*vault_lp_token, false),
         AccountMeta::new_readonly(*token_program_id, false),
-
     ];
     Ok(Instruction {
         program_id: *program_id,

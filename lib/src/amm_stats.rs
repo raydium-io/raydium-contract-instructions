@@ -62,7 +62,7 @@ pub struct AmmInfo {
     pub max_price_multiplier: u64,
     /// system decimal value, used to normalize the value of coin and pc amount
     pub sys_decimal_value: u64,
-   
+
     /// numerator of the min_separate
     pub min_separate_numerator: u64,
     /// denominator of the min_separate
@@ -84,7 +84,6 @@ pub struct AmmInfo {
     /// denominator of the swap_fee
     pub swap_fee_denominator: u64,
 
-    
     /// delay to take pnl coin
     pub need_take_pnl_coin: u64,
     /// delay to take pnl pc

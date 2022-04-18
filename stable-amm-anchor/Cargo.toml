@@ -1,0 +1,22 @@
+[package]
+name = "stable-amm-anchor"
+version = "0.1.0"
+description = "Anchor bindings for the stable AMM native instruction."
+homepage = "https://raydium.io/"
+repository = "https://github.com/raydium-io/raydium-contract-instructions"
+edition = "2021"
+keywords = ["solana", "raydium", "stable", "amm", "anchor"]
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "stable_amm_anchor"
+
+[features]
+no-entrypoint = []
+cpi = ["no-entrypoint"]
+
+[dependencies]
+anchor-lang = "0.24.2"
+solana-program = "~1.9.13"
+spl-token = { version="3.2.0", features = [ "no-entrypoint" ] }
+raydium-contract-instructions = { path = "../lib"}

@@ -1,0 +1,23 @@
+[features]
+seeds = false
+[programs.localnet]
+amm_proxy = "BUv45aNgrs7LeGTs69junTor4JfMFkBU8FX6urtG6rpr"
+
+[programs.mainnet]
+amm_proxy = "BUv45aNgrs7LeGTs69junTor4JfMFkBU8FX6urtG6rpr"
+
+[programs.devnet]
+amm_proxy = "BUv45aNgrs7LeGTs69junTor4JfMFkBU8FX6urtG6rpr"
+
+
+[registry]
+url = "https://github.com/raydium-io/amm-anchor"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

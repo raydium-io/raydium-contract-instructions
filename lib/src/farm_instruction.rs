@@ -29,7 +29,7 @@ pub enum FarmPoolInstruction {
     ///   Initializes a new StakePool.
     Initialize(InitArgs),
 
-    /// Deposit lp into the pool. 
+    /// Deposit lp into the pool.
     Deposit(u64),
 
     /// Withdraw lp token from the pool .
@@ -59,12 +59,11 @@ pub enum FarmPoolInstruction {
     /// CreateAssociatedAccount
     CreateAssociatedAccount,
 
-    /// Deposit lp into the pool V2. 
+    /// Deposit lp into the pool V2.
     DepositV2(u64),
 
     /// ithdraw lp token from the pool V2.
     WithdrawV2(u64),
-    
 }
 
 impl FarmPoolInstruction {
@@ -240,7 +239,6 @@ pub fn deposit(
     })
 }
 
-
 /// Creates a 'DepositV2' instruction.
 pub fn deposit_v2(
     program_id: &Pubkey,
@@ -284,7 +282,6 @@ pub fn deposit_v2(
     })
 }
 
-
 /// Creates a 'withdraw' instruction.
 pub fn withdraw(
     program_id: &Pubkey,
@@ -314,7 +311,6 @@ pub fn withdraw(
         AccountMeta::new(*vault_reward_token_a, false),
         AccountMeta::new_readonly(sysvar::clock::id(), false),
         AccountMeta::new_readonly(*token_program_id, false),
-
     ];
     if let Some(dest_reward_token_b) = dest_reward_token_b {
         accounts.push(AccountMeta::new(*dest_reward_token_b, false));
@@ -326,7 +322,6 @@ pub fn withdraw(
         data,
     })
 }
-
 
 /// Creates a 'withdrawV2' instruction.
 pub fn withdraw_v2(
@@ -357,7 +352,6 @@ pub fn withdraw_v2(
         AccountMeta::new(*vault_reward_token_a, false),
         AccountMeta::new_readonly(sysvar::clock::id(), false),
         AccountMeta::new_readonly(*token_program_id, false),
-
     ];
     if let Some(dest_reward_token_b) = dest_reward_token_b {
         accounts.push(AccountMeta::new(*dest_reward_token_b, false));

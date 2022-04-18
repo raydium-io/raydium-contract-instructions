@@ -1,0 +1,18 @@
+anchor_version = "0.24.2"
+
+[workspace]
+members = [
+    "lib",
+    "amm-anchor",
+    "stable-amm-anchor",
+    "farm-anchor",
+    "staking-anchor",
+]
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[programs.mainnet]
+amm = "SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ"
+stable_amm = "SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ"
