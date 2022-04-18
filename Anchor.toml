@@ -14,5 +14,7 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [programs.mainnet]
-amm = "SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ"
-stable_amm = "SSwpkEEcbUqx4vtoEByFjSkhKdCT862DNVb52nZg1UZ"
+amm = "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8"
+stable_amm = "5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h"
+farm = "CBuCnLe26faBpcBP2fktp4rp8abpcAnTWft6ZrP5Q4T"
+staking = "EhhTKczWMGQt46ynNeRX1WfeagwwJd7ufHvCDjRxjo5Q"
