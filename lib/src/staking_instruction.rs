@@ -314,7 +314,7 @@ pub fn create_associated_account(
     let data = args.serialize()?;
     let accounts = vec![
         AccountMeta::new(*stake_pool, false),
-        AccountMeta::new_readonly(*associated_user_stake_info, false),
+        AccountMeta::new(*associated_user_stake_info, false),
         AccountMeta::new_readonly(*owner, true),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
