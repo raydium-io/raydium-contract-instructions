@@ -1,8 +1,6 @@
 //! State transition types
 
-use solana_program::{
-    pubkey::Pubkey
-};
+use solana_program::pubkey::Pubkey;
 
 #[cfg_attr(feature = "client", derive(Debug))]
 #[derive(Clone, Copy)]
@@ -12,7 +10,6 @@ pub struct TargetOrder {
     pub place_price: u64,
     pub place_vol: u64,
 }
-
 
 #[cfg_attr(feature = "client", derive(Debug))]
 #[derive(Clone, Copy)]
@@ -33,11 +30,10 @@ pub struct TargetOrders {
 
     pub stable_mid_price: u128,
 
-    pub padding0: [u128;10],
+    pub padding0: [u128; 10],
     // padding, Unused bytes for future upgrades.
     pub padding: [u64; 32],
 }
-
 
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd, Debug, Default)]
 pub struct Order {
@@ -72,7 +68,6 @@ pub enum AmmStatus {
     SwapPunish = 7u64,
 }
 
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Fees {
@@ -97,7 +92,6 @@ pub struct Fees {
     /// denominator of the swap_fee
     pub swap_fee_denominator: u64,
 }
-
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -134,7 +128,6 @@ pub struct OutPutData {
     /// swap coin fee
     pub swap_coin_fee: u64,
 }
-
 
 #[cfg_attr(feature = "client", derive(Debug))]
 #[repr(C)]
@@ -201,7 +194,7 @@ pub struct AmmInfo {
     /// model data account key
     pub model_data_key: Pubkey,
     /// open_orders key
-    pub open_orders:Pubkey,
+    pub open_orders: Pubkey,
     /// serum market key
     pub serum_market: Pubkey,
     /// serum program key
@@ -213,4 +206,3 @@ pub struct AmmInfo {
     /// padding, Unused bytes for future upgrades.
     pub padding: [u64; 64],
 }
-

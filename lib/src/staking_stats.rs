@@ -48,7 +48,6 @@ pub struct StakerInfo {
     pub reward_debt: u64,
 }
 
-
 /// Information about the singe  stake account
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -67,10 +66,10 @@ pub struct StakerInfoV2 {
 
     /// reward debt
     pub reward_debt: u128,
-    
+
     /// account type
     pub account_type: u64,
 
     /// padding
-    pub padding: [u64;16],
+    pub padding: [u64; 16],
 }
