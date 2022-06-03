@@ -216,5 +216,5 @@ pub struct CreateAssociatedAccount<'info> {
     /// CHECK: Safe System program
     pub system_program: Program<'info, System>,
     /// CHECK: Safe. Clock program
-    pub clock: Sysvar<'info, Clock>,
+    pub rent: Sysvar<'info, Rent>,
 }

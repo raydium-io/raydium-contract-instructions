@@ -21,8 +21,8 @@ import {
 import {AmmProxy} from "../target/types/amm_proxy";
 
 const marketInfo = {
-    serumDexProgram: new PublicKey("z678mfRyG19BTfAJm5fcRh6hWJfNBbN1Gv9kvPCqvLA"),
-    ammProgram: new PublicKey("C21qJRTdoAh6Jk9AvpB51Rt2CMi8xkFcGUX6LeG3QTVT"),
+    serumDexProgram: new PublicKey("DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY"),
+    ammProgram: new PublicKey("9rpQHSyFVM1dkkHFQ2TtTzPEW7DVmEyPmN8wVniqJtuC"),
     serumMarket: new Keypair(),
 }
 
@@ -30,6 +30,7 @@ const marketInfo = {
 
 describe("amm-proxy", () => {
         const provider = anchor.Provider.env();
+        provider.opts.skipPreflight = true;
         anchor.setProvider(provider);
         const program = anchor.workspace.AmmProxy as Program<AmmProxy>;
         const serumMarketId = marketInfo.serumMarket.publicKey.toString()
@@ -61,7 +62,7 @@ describe("amm-proxy", () => {
                 })
                 console.log(JSON.stringify(createMarketInfo))
                 // wait for transaction success
-                sleep(3000)
+                sleep(60000)
             }
 
             // get serum market info
