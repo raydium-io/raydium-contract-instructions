@@ -1,22 +1,22 @@
 [package]
-name = "staking-anchor"
-version = "0.1.0"
 description = "Anchor bindings for the farm native instruction."
-homepage = "https://raydium.io/"
-repository = "https://github.com/raydium-io/raydium-contract-instructions"
 edition = "2021"
+homepage = "https://raydium.io/"
 keywords = ["solana", "raydium", "staking", "anchor"]
+name = "staking-anchor"
+repository = "https://github.com/raydium-io/raydium-contract-instructions"
+version = "0.1.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]
 name = "staking_anchor"
 
 [features]
-no-entrypoint = []
 cpi = ["no-entrypoint"]
+no-entrypoint = []
 
 [dependencies]
-anchor-lang = "0.24.2"
-solana-program = "~1.9.13"
-spl-token = { version="3.2.0", features = [ "no-entrypoint" ] }
-raydium-contract-instructions = { path = "../lib"}
+anchor-lang = "0.26"
+raydium-contract-instructions = {path = "../lib"}
+solana-program = "1.14.12"
+spl-token = {version = "3.3.0", features = ["no-entrypoint"]}
