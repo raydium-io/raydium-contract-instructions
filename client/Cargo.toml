@@ -9,9 +9,9 @@ path = "src/main.rs"
 
 [dependencies]
 raydium-contract-instructions = { path = "../lib"}
-spl-token = { version = "3.2.0", features = ["no-entrypoint"], default-features = false }
+spl-token = { version = "3.5.0", features = ["no-entrypoint"], default-features = false }
 spl-associated-token-account = "1.0.3"
-solana-client = "1.9.5"
-solana-sdk = "1.9.5"
+solana-client = "1.13.3"
+solana-sdk = "1.13.3"
 anyhow = "1.0.53"
 
