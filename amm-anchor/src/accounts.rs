@@ -122,6 +122,8 @@ pub struct Deposit<'info> {
     pub pool_pc_token_account: AccountInfo<'info>,
     /// CHECK: Safe. Serum market account, serum_dex program is the owner.
     pub serum_market: AccountInfo<'info>,
+    /// CHECK: Safe. Serum event queue account, serum_dex program is the owner.
+    pub serum_event_queue: AccountInfo<'info>,
     /// CHECK: Safe. User coin token account to deposit into.
     #[account(mut)]
     pub user_coin_token_account: AccountInfo<'info>,

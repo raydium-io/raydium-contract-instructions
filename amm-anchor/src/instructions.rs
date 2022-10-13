@@ -105,6 +105,7 @@ pub fn deposit<'a, 'b, 'c, 'info>(
         ctx.accounts.pool_coin_token_account.key,
         ctx.accounts.pool_pc_token_account.key,
         ctx.accounts.serum_market.key,
+        ctx.accounts.serum_event_queue.key,
         ctx.accounts.user_coin_token_account.key,
         ctx.accounts.user_pc_token_account.key,
         ctx.accounts.user_lp_token_account.key,

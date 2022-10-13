@@ -11,6 +11,18 @@ use solana_program::{
 use std::convert::TryInto;
 use std::mem::size_of;
 
+pub mod amm_program {
+    solana_program::declare_id!("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8");
+}
+
+pub mod stable_program {
+    solana_program::declare_id!("5quBtoiQqxF9Jv6KYKctB59NT3gtJD2Y65kdnB1Uev3h");
+}
+
+pub mod amm_v3_program {
+    solana_program::declare_id!("CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK");
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct RouteSwapBaseInArgs {
@@ -42,9 +54,6 @@ pub enum RouteInstruction {
     // amm swap base in
     RouteSwapBaseInIn(RouteSwapBaseInArgs),
     RouteSwapBaseInMinOut,
-    // amm swap base out
-    RouteSwapBaseOutMaxIn(RouteSwapBaseOutArgs),
-    RouteSwapBaseOutOut,
 }
 
 impl RouteInstruction {
@@ -79,15 +88,6 @@ impl RouteInstruction {
                 })
             }
             5 => Self::RouteSwapBaseInMinOut,
-            6 => {
-                let (max_amount_in, rest) = Self::unpack_u64(rest)?;
-                let (amount_out, _rest) = Self::unpack_u64(rest)?;
-                Self::RouteSwapBaseOutMaxIn(RouteSwapBaseOutArgs {
-                    max_amount_in,
-                    amount_out,
-                })
-            }
-            7 => Self::RouteSwapBaseOutOut,
             _ => return Err(RouteError::InvalidInstruction.into()),
         })
     }
@@ -142,17 +142,6 @@ impl RouteInstruction {
             }
             Self::RouteSwapBaseInMinOut => {
                 buf.push(5);
-            }
-            Self::RouteSwapBaseOutMaxIn(RouteSwapBaseOutArgs {
-                max_amount_in,
-                amount_out,
-            }) => {
-                buf.push(6);
-                buf.extend_from_slice(&max_amount_in.to_le_bytes());
-                buf.extend_from_slice(&amount_out.to_le_bytes());
-            }
-            Self::RouteSwapBaseOutOut => {
-                buf.push(7);
             }
         }
         Ok(buf)
@@ -428,33 +417,57 @@ pub fn route_stable_swap_min_out(
 }
 
 /// Creates a 'route swap base in in' instruction.
+///
+/// About remaining_accounts details
+/// amm:
+///     amm_authority `[]`,
+///     serum_program_id `[]`,
+///     serum_vault_signer `[]`
+///     amm_open_orders `[writable]`,
+///     amm_coin_vault `[writable]`,
+///     amm_pc_vault `[writable]`,
+///     serum_market `[writable]`,
+///     serum_bids `[writable]`,
+///     serum_asks `[writable]`,
+///     serum_event_queue `[writable]`,
+///     serum_coin_vault `[writable]`,
+///     serum_pc_vault `[writable]`,
+///
+/// stable:
+///     amm_authority `[]`,
+///     serum_program_id `[]`,
+///     serum_vault_signer `[]`,
+///     model_data_account `[]`,
+///     amm_open_orders `[writable]`,
+///     amm_coin_vault `[writable]`,
+///     amm_pc_vault `[writable]`,
+///     serum_market `[writable]`,
+///     serum_bids `[writable]`,
+///     serum_asks `[writable]`,
+///     serum_event_queue `[writable]`,
+///     serum_coin_vault `[writable]`,
+///     serum_pc_vault `[writable]`,
+///
+/// amm_v3:
+///     amm_config `[]`,
+///     pool_state `[writable]`,
+///     input_vault `[writable]`,
+///     output_vault `[writable]`,
+///     observation_state `[writable]`,
+///     cur_or_next_tick_array `[writable]`,
+///     next_tick_array `[writable]`,
+///     next_next_tick_array `[writable]`,
+///     ...
 pub fn route_swap_base_in_in(
     program_id: &Pubkey,
-
     from_amm_program_id: &Pubkey,
     from_amm_id: &Pubkey,
-    from_amm_authority: &Pubkey,
-    from_amm_open_orders: &Pubkey,
-    from_amm_coin_vault: &Pubkey,
-    from_amm_pc_vault: &Pubkey,
-
-    from_serum_program_id: &Pubkey,
-    from_serum_market: &Pubkey,
-    from_serum_bids: &Pubkey,
-    from_serum_asks: &Pubkey,
-    from_serum_event_queue: &Pubkey,
-    from_serum_coin_vault: &Pubkey,
-    from_serum_pc_vault: &Pubkey,
-    from_serum_vault_signer: &Pubkey,
-
     to_amm_id: &Pubkey,
-
     user_source_token: &Pubkey,
     user_route_token: &Pubkey,
     user_pda_account: &Pubkey,
     user_source_owner: &Pubkey,
-
-    model_data_account: Option<&Pubkey>,
+    remaining_accounts: Vec<Pubkey>,
 
     amount_in: u64,
     minimum_amount_out: u64,
@@ -472,19 +485,6 @@ pub fn route_swap_base_in_in(
         // from amm
         AccountMeta::new_readonly(*from_amm_program_id, false),
         AccountMeta::new(*from_amm_id, false),
-        AccountMeta::new_readonly(*from_amm_authority, false),
-        AccountMeta::new(*from_amm_open_orders, false),
-        AccountMeta::new(*from_amm_coin_vault, false),
-        AccountMeta::new(*from_amm_pc_vault, false),
-        // from serum
-        AccountMeta::new_readonly(*from_serum_program_id, false),
-        AccountMeta::new(*from_serum_market, false),
-        AccountMeta::new(*from_serum_bids, false),
-        AccountMeta::new(*from_serum_asks, false),
-        AccountMeta::new(*from_serum_event_queue, false),
-        AccountMeta::new(*from_serum_coin_vault, false),
-        AccountMeta::new(*from_serum_pc_vault, false),
-        AccountMeta::new_readonly(*from_serum_vault_signer, false),
         // to amm
         AccountMeta::new(*to_amm_id, false),
         // user
@@ -493,9 +493,32 @@ pub fn route_swap_base_in_in(
         AccountMeta::new(*user_pda_account, false),
         AccountMeta::new_readonly(*user_source_owner, true),
     ];
-    if let Some(model_data_key) = model_data_account {
-        accounts.push(AccountMeta::new_readonly(*model_data_key, false));
+    let mut remaining = remaining_accounts;
+    let read_only_accounts;
+    let read_write_accounts;
+    // split remaining_accounts for read_only and read_write accounts
+    if *program_id == amm_program::id() {
+        read_write_accounts = remaining.split_off(3);
+        read_only_accounts = remaining;
+    } else if *program_id == stable_program::id() {
+        read_write_accounts = remaining.split_off(4);
+        read_only_accounts = remaining;
+    } else {
+        read_write_accounts = remaining.split_off(1);
+        read_only_accounts = remaining;
     }
+    // extend read_only accounts
+    accounts.extend(
+        read_only_accounts
+            .iter()
+            .map(|pk| AccountMeta::new_readonly(*pk, false)),
+    );
+    // extend read_write accounts
+    accounts.extend(
+        read_write_accounts
+            .iter()
+            .map(|pk| AccountMeta::new(*pk, false)),
+    );
 
     Ok(Instruction {
         program_id: *program_id,
@@ -505,32 +528,57 @@ pub fn route_swap_base_in_in(
 }
 
 /// Creates a 'route swap base in min_out' instruction.
+///
+/// About remaining_accounts details
+/// amm:
+///     amm_authority `[]`,
+///     serum_program_id `[]`,
+///     serum_vault_signer `[]`
+///     amm_open_orders `[writable]`,
+///     amm_coin_vault `[writable]`,
+///     amm_pc_vault `[writable]`,
+///     serum_market `[writable]`,
+///     serum_bids `[writable]`,
+///     serum_asks `[writable]`,
+///     serum_event_queue `[writable]`,
+///     serum_coin_vault `[writable]`,
+///     serum_pc_vault `[writable]`,
+///
+/// stable:
+///     amm_authority `[]`,
+///     serum_program_id `[]`,
+///     serum_vault_signer `[]`,
+///     model_data_account `[]`,
+///     amm_open_orders `[writable]`,
+///     amm_coin_vault `[writable]`,
+///     amm_pc_vault `[writable]`,
+///     serum_market `[writable]`,
+///     serum_bids `[writable]`,
+///     serum_asks `[writable]`,
+///     serum_event_queue `[writable]`,
+///     serum_coin_vault `[writable]`,
+///     serum_pc_vault `[writable]`,
+///
+/// amm_v3:
+///     amm_config `[]`,
+///     pool_state `[writable]`,
+///     input_vault `[writable]`,
+///     output_vault `[writable]`,
+///     observation_state `[writable]`,
+///     cur_or_next_tick_array `[writable]`,
+///     next_tick_array `[writable]`,
+///     next_next_tick_array `[writable]`,
+///     ...
 pub fn route_swap_base_in_min_out(
     program_id: &Pubkey,
-
-    from_amm_id: &Pubkey,
     to_amm_program_id: &Pubkey,
     to_amm_id: &Pubkey,
-    to_amm_authority: &Pubkey,
-    to_amm_open_orders: &Pubkey,
-    to_amm_coin_vault: &Pubkey,
-    to_amm_pc_vault: &Pubkey,
-
-    to_serum_program_id: &Pubkey,
-    to_serum_market: &Pubkey,
-    to_serum_bids: &Pubkey,
-    to_serum_asks: &Pubkey,
-    to_serum_event_queue: &Pubkey,
-    to_serum_coin_vault: &Pubkey,
-    to_serum_pc_vault: &Pubkey,
-    to_serum_vault_signer: &Pubkey,
-
+    from_amm_id: &Pubkey,
     user_route_token: &Pubkey,
     user_destination_token: &Pubkey,
     user_pda_account: &Pubkey,
     user_source_owner: &Pubkey,
-
-    model_data_account: Option<&Pubkey>,
+    remaining_accounts: Vec<Pubkey>,
 ) -> Result<Instruction, ProgramError> {
     let data = RouteInstruction::RouteSwapBaseInMinOut.pack()?;
 
@@ -538,197 +586,44 @@ pub fn route_swap_base_in_min_out(
         // spl token
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
-        // from amm
-        AccountMeta::new(*from_amm_id, false),
         // to amm
         AccountMeta::new_readonly(*to_amm_program_id, false),
         AccountMeta::new(*to_amm_id, false),
-        AccountMeta::new_readonly(*to_amm_authority, false),
-        AccountMeta::new(*to_amm_open_orders, false),
-        AccountMeta::new(*to_amm_coin_vault, false),
-        AccountMeta::new(*to_amm_pc_vault, false),
-        // to serum
-        AccountMeta::new_readonly(*to_serum_program_id, false),
-        AccountMeta::new(*to_serum_market, false),
-        AccountMeta::new(*to_serum_bids, false),
-        AccountMeta::new(*to_serum_asks, false),
-        AccountMeta::new(*to_serum_event_queue, false),
-        AccountMeta::new(*to_serum_coin_vault, false),
-        AccountMeta::new(*to_serum_pc_vault, false),
-        AccountMeta::new_readonly(*to_serum_vault_signer, false),
+        // from amm
+        AccountMeta::new(*from_amm_id, false),
         // user
         AccountMeta::new(*user_route_token, false),
         AccountMeta::new(*user_destination_token, false),
         AccountMeta::new(*user_pda_account, false),
         AccountMeta::new_readonly(*user_source_owner, true),
     ];
-    if let Some(model_data_key) = model_data_account {
-        accounts.push(AccountMeta::new_readonly(*model_data_key, false));
+    let mut remaining = remaining_accounts;
+    let read_only_accounts;
+    let read_write_accounts;
+    // split remaining_accounts for read_only and read_write accounts
+    if *program_id == amm_program::id() {
+        read_write_accounts = remaining.split_off(3);
+        read_only_accounts = remaining;
+    } else if *program_id == stable_program::id() {
+        read_write_accounts = remaining.split_off(4);
+        read_only_accounts = remaining;
+    } else {
+        // amm_v3
+        read_write_accounts = remaining.split_off(1);
+        read_only_accounts = remaining;
     }
-
-    Ok(Instruction {
-        program_id: *program_id,
-        accounts,
-        data,
-    })
-}
-
-/// Creates a 'route swap base out max_in' instruction.
-pub fn route_swap_base_out_max_in(
-    program_id: &Pubkey,
-
-    from_amm_program_id: &Pubkey,
-    from_amm_id: &Pubkey,
-    from_amm_authority: &Pubkey,
-    from_amm_open_orders: &Pubkey,
-    from_amm_coin_vault: &Pubkey,
-    from_amm_pc_vault: &Pubkey,
-
-    from_serum_program_id: &Pubkey,
-    from_serum_market: &Pubkey,
-    from_serum_bids: &Pubkey,
-    from_serum_asks: &Pubkey,
-    from_serum_event_queue: &Pubkey,
-    from_serum_coin_vault: &Pubkey,
-    from_serum_pc_vault: &Pubkey,
-    from_serum_vault_signer: &Pubkey,
-
-    to_amm_program_id: &Pubkey,
-    to_amm_id: &Pubkey,
-    to_amm_authority: &Pubkey,
-    to_amm_open_orders: &Pubkey,
-    to_amm_coin_vault: &Pubkey,
-    to_amm_pc_vault: &Pubkey,
-
-    to_serum_program_id: &Pubkey,
-    to_serum_market: &Pubkey,
-
-    user_source_token: &Pubkey,
-    user_route_token: &Pubkey,
-    user_destination_token: &Pubkey,
-    user_pda_account: &Pubkey,
-    user_source_owner: &Pubkey,
-
-    model_data_account: Option<&Pubkey>,
-
-    max_amount_in: u64,
-    amount_out: u64,
-) -> Result<Instruction, ProgramError> {
-    let data = RouteInstruction::RouteSwapBaseOutMaxIn(RouteSwapBaseOutArgs {
-        max_amount_in,
-        amount_out,
-    })
-    .pack()?;
-
-    let mut accounts = vec![
-        // spl token
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        // from amm
-        AccountMeta::new_readonly(*from_amm_program_id, false),
-        AccountMeta::new(*from_amm_id, false),
-        AccountMeta::new_readonly(*from_amm_authority, false),
-        AccountMeta::new(*from_amm_open_orders, false),
-        AccountMeta::new(*from_amm_coin_vault, false),
-        AccountMeta::new(*from_amm_pc_vault, false),
-        // from serum
-        AccountMeta::new_readonly(*from_serum_program_id, false),
-        AccountMeta::new(*from_serum_market, false),
-        AccountMeta::new(*from_serum_bids, false),
-        AccountMeta::new(*from_serum_asks, false),
-        AccountMeta::new(*from_serum_event_queue, false),
-        AccountMeta::new(*from_serum_coin_vault, false),
-        AccountMeta::new(*from_serum_pc_vault, false),
-        AccountMeta::new_readonly(*from_serum_vault_signer, false),
-        // to amm
-        AccountMeta::new_readonly(*to_amm_program_id, false),
-        AccountMeta::new(*to_amm_id, false),
-        AccountMeta::new_readonly(*to_amm_authority, false),
-        AccountMeta::new(*to_amm_open_orders, false),
-        AccountMeta::new(*to_amm_coin_vault, false),
-        AccountMeta::new(*to_amm_pc_vault, false),
-        // to serum
-        AccountMeta::new_readonly(*to_serum_program_id, false),
-        AccountMeta::new(*to_serum_market, false),
-        // user
-        AccountMeta::new(*user_source_token, false),
-        AccountMeta::new(*user_route_token, false),
-        AccountMeta::new(*user_destination_token, false),
-        AccountMeta::new(*user_pda_account, false),
-        AccountMeta::new_readonly(*user_source_owner, true),
-    ];
-    if let Some(model_data_key) = model_data_account {
-        accounts.push(AccountMeta::new_readonly(*model_data_key, false));
-    }
-
-    Ok(Instruction {
-        program_id: *program_id,
-        accounts,
-        data,
-    })
-}
-
-/// Creates a 'route swap base out out' instruction.
-pub fn route_swap_base_out_out(
-    program_id: &Pubkey,
-
-    from_amm_id: &Pubkey,
-    to_amm_program_id: &Pubkey,
-    to_amm_id: &Pubkey,
-    to_amm_authority: &Pubkey,
-    to_amm_open_orders: &Pubkey,
-    to_amm_coin_vault: &Pubkey,
-    to_amm_pc_vault: &Pubkey,
-
-    to_serum_program_id: &Pubkey,
-    to_serum_market: &Pubkey,
-    to_serum_bids: &Pubkey,
-    to_serum_asks: &Pubkey,
-    to_serum_event_queue: &Pubkey,
-    to_serum_coin_vault: &Pubkey,
-    to_serum_pc_vault: &Pubkey,
-    to_serum_vault_signer: &Pubkey,
-
-    user_route_token: &Pubkey,
-    user_destination_token: &Pubkey,
-    user_pda_account: &Pubkey,
-    user_source_owner: &Pubkey,
-
-    model_data_account: Option<&Pubkey>,
-) -> Result<Instruction, ProgramError> {
-    let data = RouteInstruction::RouteSwapBaseOutOut.pack()?;
-
-    let mut accounts = vec![
-        // spl token
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        // from amm
-        AccountMeta::new(*from_amm_id, false),
-        // to amm
-        AccountMeta::new_readonly(*to_amm_program_id, false),
-        AccountMeta::new(*to_amm_id, false),
-        AccountMeta::new_readonly(*to_amm_authority, false),
-        AccountMeta::new(*to_amm_open_orders, false),
-        AccountMeta::new(*to_amm_coin_vault, false),
-        AccountMeta::new(*to_amm_pc_vault, false),
-        // to serum
-        AccountMeta::new_readonly(*to_serum_program_id, false),
-        AccountMeta::new(*to_serum_market, false),
-        AccountMeta::new(*to_serum_bids, false),
-        AccountMeta::new(*to_serum_asks, false),
-        AccountMeta::new(*to_serum_event_queue, false),
-        AccountMeta::new(*to_serum_coin_vault, false),
-        AccountMeta::new(*to_serum_pc_vault, false),
-        AccountMeta::new_readonly(*to_serum_vault_signer, false),
-        // user
-        AccountMeta::new(*user_route_token, false),
-        AccountMeta::new(*user_destination_token, false),
-        AccountMeta::new(*user_pda_account, false),
-        AccountMeta::new_readonly(*user_source_owner, true),
-    ];
-    if let Some(model_data_key) = model_data_account {
-        accounts.push(AccountMeta::new_readonly(*model_data_key, false));
-    }
+    // extend read_only accounts
+    accounts.extend(
+        read_only_accounts
+            .iter()
+            .map(|pk| AccountMeta::new_readonly(*pk, false)),
+    );
+    // extend read_write accounts
+    accounts.extend(
+        read_write_accounts
+            .iter()
+            .map(|pk| AccountMeta::new(*pk, false)),
+    );
 
     Ok(Instruction {
         program_id: *program_id,

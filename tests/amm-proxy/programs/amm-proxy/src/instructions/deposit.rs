@@ -27,6 +27,8 @@ pub struct ProxyDeposit<'info> {
     /// CHECK: Safe
     pub serum_market: AccountInfo<'info>,
     /// CHECK: Safe
+    pub serum_event_queue: AccountInfo<'info>,
+    /// CHECK: Safe
     #[account(mut)]
     pub user_coin_token_account: AccountInfo<'info>,
     /// CHECK: Safe
@@ -54,6 +56,7 @@ impl<'a, 'b, 'c, 'info> From<&mut ProxyDeposit<'info>>
             pool_coin_token_account: accounts.pool_coin_token_account.clone(),
             pool_pc_token_account: accounts.pool_pc_token_account.clone(),
             serum_market: accounts.serum_market.clone(),
+            serum_event_queue: accounts.serum_event_queue.clone(),
             user_coin_token_account: accounts.user_coin_token_account.clone(),
             user_pc_token_account: accounts.user_pc_token_account.clone(),
             user_lp_token_account: accounts.user_lp_token_account.clone(),

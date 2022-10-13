@@ -435,6 +435,7 @@ pub fn deposit(
     pool_coin_token_account: &Pubkey,
     pool_pc_token_account: &Pubkey,
     serum_market: &Pubkey,
+    serum_event_queue: &Pubkey,
     user_coin_token_account: &Pubkey,
     user_pc_token_account: &Pubkey,
     user_lp_token_account: &Pubkey,
@@ -469,6 +470,7 @@ pub fn deposit(
         AccountMeta::new(*user_pc_token_account, false),
         AccountMeta::new(*user_lp_token_account, false),
         AccountMeta::new_readonly(*user_owner, true),
+        AccountMeta::new_readonly(*serum_event_queue, false),
     ];
 
     Ok(Instruction {
