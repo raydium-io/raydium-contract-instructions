@@ -16,6 +16,6 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.24.2"
+anchor-lang = "0.25.0"
+spl-token = { version="~3.3.0", features = [ "no-entrypoint" ] }
 amm-anchor = {path = "../../../../amm-anchor"}
-spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
