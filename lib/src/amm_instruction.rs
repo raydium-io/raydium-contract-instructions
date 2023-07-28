@@ -23,6 +23,19 @@ pub struct InitializeInstruction {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct InitializeInstruction2 {
+    /// nonce used to create valid program address
+    pub nonce: u8,
+    /// utc timestamps for pool open
+    pub open_time: u64,
+    /// init token pc amount
+    pub init_pc_amount: u64,
+    /// init token coin amount
+    pub init_coin_amount: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct PreInitializeInstruction {
     /// nonce used to create valid program address
     pub nonce: u8,
@@ -86,7 +99,25 @@ pub enum AmmInstruction {
     ///   13. `[]` serum market Account. serum_dex program is the owner.
     Initialize(InitializeInstruction),
 
-    Reserved,
+    ///   Continue Initializes the new AmmInfo.
+    ///
+    ///   0. `[]` Spl Token program id
+    ///   1. `[]` Rent program id
+    ///   2. `[writable, signer]` Continue to init amm Account.
+    ///   3. `[]` $authority derived from `create_program_address(&[amm Account])`
+    ///   4. `[writable]` amm open_orders Account
+    ///   5. `[writable]` pool_token_coin Account. Must be non zero, owned by $authority.
+    ///   6. `[writable]` pool_token_pc Account. Must be non zero, owned by $authority.
+    ///   7. `[writable]` amm target_orders Account. To store plan orders infomations.
+    ///   8. `[]` serum dex program id
+    ///   9. `[writable]` serum market Account. serum_dex program is the owner.
+    ///   10. `[writable]` coin_vault Account
+    ///   11. `[writable]` pc_vault Account
+    ///   12. '[writable]` req_q Account
+    ///   13. `[writable]` event_q Account
+    ///   14. `[writable]` bids Account
+    ///   15. `[writable]` asks Account
+    Initialize2(InitializeInstruction2),
 
     Reserved0,
 
@@ -200,6 +231,18 @@ impl AmmInstruction {
                 let (open_time, _rest) = Self::unpack_u64(rest)?;
                 Self::Initialize(InitializeInstruction { nonce, open_time })
             }
+            1 => {
+                let (nonce, rest) = Self::unpack_u8(rest)?;
+                let (open_time, rest) = Self::unpack_u64(rest)?;
+                let (init_pc_amount, rest) = Self::unpack_u64(rest)?;
+                let (init_coin_amount, _reset) = Self::unpack_u64(rest)?;
+                Self::Initialize2(InitializeInstruction2 {
+                    nonce,
+                    open_time,
+                    init_pc_amount,
+                    init_coin_amount,
+                })
+            }
 
             3 => {
                 let (max_coin_amount, rest) = Self::unpack_u64(rest)?;
@@ -277,6 +320,18 @@ impl AmmInstruction {
                 buf.push(0);
                 buf.push(*nonce);
                 buf.extend_from_slice(&open_time.to_le_bytes());
+            }
+            Self::Initialize2(InitializeInstruction2 {
+                nonce,
+                open_time,
+                init_pc_amount,
+                init_coin_amount,
+            }) => {
+                buf.push(1);
+                buf.push(*nonce);
+                buf.extend_from_slice(&open_time.to_le_bytes());
+                buf.extend_from_slice(&init_pc_amount.to_le_bytes());
+                buf.extend_from_slice(&init_coin_amount.to_le_bytes());
             }
             Self::Deposit(DepositInstruction {
                 max_coin_amount,
@@ -415,6 +470,74 @@ pub fn initialize(
         AccountMeta::new_readonly(*serum_market, false),
         // user wallet
         AccountMeta::new(*user_wallet, true),
+    ];
+
+    Ok(Instruction {
+        program_id: *program_id,
+        accounts,
+        data,
+    })
+}
+
+/// Creates an 'initialize2' instruction.
+pub fn initialize2(
+    program_id: &Pubkey,
+    amm_id: &Pubkey,
+    amm_authority: &Pubkey,
+    amm_open_orders: &Pubkey,
+    lp_mint_key: &Pubkey,
+    coin_mint_key: &Pubkey,
+    pc_mint_key: &Pubkey,
+    pool_coin_token_account: &Pubkey,
+    pool_pc_token_account: &Pubkey,
+    pool_withdraw_queue: &Pubkey,
+    amm_target_orders: &Pubkey,
+    pool_temp_lp_key: &Pubkey,
+    serum_program_id: &Pubkey,
+    serum_market: &Pubkey,
+    user_wallet: &Pubkey,
+    user_token_coin: &Pubkey,
+    user_token_pc: &Pubkey,
+    user_lp_token_account: &Pubkey,
+    nonce: u8,
+    open_time: u64,
+    init_pc_amount: u64,
+    init_coin_amount: u64,
+) -> Result<Instruction, ProgramError> {
+    let init_data = AmmInstruction::Initialize2(InitializeInstruction2 {
+        nonce,
+        open_time,
+        init_pc_amount,
+        init_coin_amount,
+    });
+    let data = init_data.pack()?;
+
+    let accounts = vec![
+        // spl
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+        // amm
+        AccountMeta::new(*amm_id, false),
+        AccountMeta::new_readonly(*amm_authority, false),
+        AccountMeta::new(*amm_open_orders, false),
+        AccountMeta::new(*lp_mint_key, false),
+        AccountMeta::new_readonly(*coin_mint_key, false),
+        AccountMeta::new_readonly(*pc_mint_key, false),
+        AccountMeta::new(*pool_coin_token_account, false),
+        AccountMeta::new(*pool_pc_token_account, false),
+        AccountMeta::new(*pool_withdraw_queue, false),
+        AccountMeta::new(*amm_target_orders, false),
+        AccountMeta::new(*pool_temp_lp_key, false),
+        // serum
+        AccountMeta::new_readonly(*serum_program_id, false),
+        AccountMeta::new_readonly(*serum_market, false),
+        // user wallet
+        AccountMeta::new(*user_wallet, true),
+        AccountMeta::new(*user_token_coin, false),
+        AccountMeta::new(*user_token_pc, false),
+        AccountMeta::new(*user_lp_token_account, false),
     ];
 
     Ok(Instruction {

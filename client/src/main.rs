@@ -32,7 +32,6 @@ fn main() -> Result<()> {
     let rpc = RpcClient::new("https://api.mainnet-beta.solana.com".to_string() );
 
     let payer = read_keypair_file("id.json")?;
-
     // should create the spl ata accounts first if not exist
     let user_ray_account = get_associated_token_address(&payer.pubkey(), 
         &Pubkey::from_str("4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R")?);
@@ -44,7 +43,6 @@ fn main() -> Result<()> {
         &Pubkey::from_str("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB")?);
 
 
-    
     // https://api.raydium.io/v2/sdk/liquidity/mainnet.json
     // RAY-USDC
     // {
@@ -55,41 +53,41 @@ fn main() -> Result<()> {
     //     "baseDecimals":6,"quoteDecimals":6,"lpDecimals":6,"version":4,
     //     "programId":"675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",
     //     "authority":"5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1",
-    //     "openOrders":"J8u8nTHYtvudyqwLrXZboziN95LpaHFHpd97Jm5vtbkW",
+    //     "openOrders":"CSCS9J8eVQ4vnWfWCx59Dz8oLGtcdQ5R53ea4V9o2eUp",
     //     "targetOrders":"3cji8XW5uhtsA757vELVFAeJpskyHwbnTSceMFY5GjVT",
     //     "baseVault":"FdmKUE4UMiJYFK5ogCngHzShuVKrFXBamPWcewDr31th",
     //     "quoteVault":"Eqrhxd7bDUCH3MepKmdVkgwazXRzY6iHhEoBpY7yAohk",
     //     "withdrawQueue":"ERiPLHrxvjsoMuaWDWSTLdCMzRkQSo8SkLBLYEmSokyr",
     //     "lpVault":"D1V5GMf3N26owUFcbz2qR5N4G81qPKQvS2Vc4SM73XGB",
-    //     "marketVersion":3,
-    //     "marketProgramId":"9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
-    //     "marketId":"2xiv8A5xrJ7RnGdxXB42uFEkYHJjszEhaJyKKt4WaLep",
-    //     "marketAuthority":"FmhXe9uG6zun49p222xt3nG1rBAkWvzVz7dxERQ6ouGw",
-    //     "marketBaseVault":"GGcdamvNDYFhAXr93DWyJ8QmwawUHLCyRqWL3KngtLRa",
-    //     "marketQuoteVault":"22jHt5WmosAykp3LPGSAKgY45p7VGh4DFWSwp21SWBVe",
-    //     "marketBids":"Hf84mYadE1VqSvVWAvCWc9wqLXak4RwXiPb4A91EAUn5",
-    //     "marketAsks":"DC1HsWWRCXVg3wk2NndS5LTbce3axwUwUZH1RgnV4oDN",
-    //     "marketEventQueue":"H9dZt8kvz1Fe5FyRisb77KcYTaN8LEbuVAfJSnAaEABz"
+    //     "marketVersion":4,
+    //     "marketProgramId": "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX",
+    //     "marketId": "DZjbn4XC8qoHKikZqzmhemykVzmossoayV9ffbsUqxVj",
+    //     "marketAuthority": "HYfri5vWyYiDziQeprFErUTbrWdUnkfAFnAAGApZjdGv",
+    //     "marketBaseVault": "7ssdQJxVAEBSigoJovgHcchwcEQFPPtYbyzLHDHEewKM",
+    //     "marketQuoteVault": "EBGFfeQ5dVwW4HxtShVbh8aCh2fKJ1r2qXBoa6teUve6",
+    //     "marketBids": "CXMRrGEseppLPmzYJsx5vYwTkaDEag4A9LJvgrAeNpF",
+    //     "marketAsks": "27BrDDYtv9NDQCALCNnDqe3BqjYkgiaQwKBbyqCA8p8B",
+    //     "marketEventQueue": "EkKZwBeKWPvhraYERfUNr2fdh1eazrbTrQXYkRZs24XB",
     // },
 
     let instr = amm_swap(
         &ammProgramID,
         &Pubkey::from_str("6UmmUiYoBjSrhakAobJw8BvkmJtDVxaeBtbt7rxWo1mg")?,
         &Pubkey::from_str("5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1")?,
-        &Pubkey::from_str("J8u8nTHYtvudyqwLrXZboziN95LpaHFHpd97Jm5vtbkW")?,
+        &Pubkey::from_str("CSCS9J8eVQ4vnWfWCx59Dz8oLGtcdQ5R53ea4V9o2eUp")?,
         &Pubkey::from_str("3cji8XW5uhtsA757vELVFAeJpskyHwbnTSceMFY5GjVT")?,
         &Pubkey::from_str("FdmKUE4UMiJYFK5ogCngHzShuVKrFXBamPWcewDr31th")?,
         &Pubkey::from_str("Eqrhxd7bDUCH3MepKmdVkgwazXRzY6iHhEoBpY7yAohk")?,
 
-        &Pubkey::from_str("9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin")?,
-        &Pubkey::from_str("2xiv8A5xrJ7RnGdxXB42uFEkYHJjszEhaJyKKt4WaLep")?,
-        &Pubkey::from_str("Hf84mYadE1VqSvVWAvCWc9wqLXak4RwXiPb4A91EAUn5")?,
-        &Pubkey::from_str("DC1HsWWRCXVg3wk2NndS5LTbce3axwUwUZH1RgnV4oDN")?,
-        &Pubkey::from_str("H9dZt8kvz1Fe5FyRisb77KcYTaN8LEbuVAfJSnAaEABz")?,
+        &Pubkey::from_str("srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX")?,
+        &Pubkey::from_str("DZjbn4XC8qoHKikZqzmhemykVzmossoayV9ffbsUqxVj")?,
+        &Pubkey::from_str("CXMRrGEseppLPmzYJsx5vYwTkaDEag4A9LJvgrAeNpF")?,
+        &Pubkey::from_str("27BrDDYtv9NDQCALCNnDqe3BqjYkgiaQwKBbyqCA8p8B")?,
+        &Pubkey::from_str("EkKZwBeKWPvhraYERfUNr2fdh1eazrbTrQXYkRZs24XB")?,
 
-        &Pubkey::from_str("GGcdamvNDYFhAXr93DWyJ8QmwawUHLCyRqWL3KngtLRa")?,
-        &Pubkey::from_str("22jHt5WmosAykp3LPGSAKgY45p7VGh4DFWSwp21SWBVe")?,
-        &Pubkey::from_str("FmhXe9uG6zun49p222xt3nG1rBAkWvzVz7dxERQ6ouGw")?,
+        &Pubkey::from_str("7ssdQJxVAEBSigoJovgHcchwcEQFPPtYbyzLHDHEewKM")?,
+        &Pubkey::from_str("EBGFfeQ5dVwW4HxtShVbh8aCh2fKJ1r2qXBoa6teUve6")?,
+        &Pubkey::from_str("HYfri5vWyYiDziQeprFErUTbrWdUnkfAFnAAGApZjdGv")?,
 
         &user_ray_account,
         &user_usdc_account,

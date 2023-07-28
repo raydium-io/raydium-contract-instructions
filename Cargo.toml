@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    # "client",
+    "client",
     "lib",
     "amm-anchor",
     "stable-amm-anchor",

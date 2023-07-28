@@ -5,8 +5,9 @@ edition = "2021"
 
 
 [dependencies]
-solana-program = "~1.10.29"
-spl-token = { version="~3.3.0", features = [ "no-entrypoint" ] }
+solana-program = "1.14.6"
+spl-token = { version="3.5.0", features = [ "no-entrypoint" ] }
+spl-associated-token-account = { version = "1.1.2", features = ["no-entrypoint"]}
 num-derive = "0.3"
 num-traits = "0.2.12"
 thiserror = "1.0.20"
