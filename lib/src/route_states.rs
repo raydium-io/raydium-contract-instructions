@@ -2,7 +2,7 @@
 //!
 
 use solana_program::pubkey::Pubkey;
-/// Information about the single route pta account
+/// Information about the single route pda account
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct RoutePdaInfo {
