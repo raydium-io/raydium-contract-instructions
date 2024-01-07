@@ -2,3 +2,5 @@
 members = [
     "programs/*"
 ]
+
+resolver = "2"
