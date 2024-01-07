@@ -1,6 +1,6 @@
 [package]
 name = "amm-anchor"
-version = "0.1.0"
+version = "0.2.0"
 description = "Anchor bindings for the AMM native instruction."
 homepage = "https://raydium.io/"
 repository = "https://github.com/raydium-io/raydium-contract-instructions"
