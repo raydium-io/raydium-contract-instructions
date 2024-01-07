@@ -1,6 +1,6 @@
 [package]
 name = "amm_client"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 
 [[bin]]
@@ -9,8 +9,8 @@ path = "src/main.rs"
 
 [dependencies]
 raydium-contract-instructions = { path = "../lib"}
-spl-token = { version = "3.2.0", features = ["no-entrypoint"], default-features = false }
-spl-associated-token-account = "1.0.3"
+spl-token = { version = "4.0.0", features = ["no-entrypoint"], default-features = false }
+spl-associated-token-account = "2.3.0"
 solana-client = "1.9.5"
 solana-sdk = "1.9.5"
 anyhow = "1.0.53"

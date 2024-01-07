@@ -1,6 +1,6 @@
 [package]
 name = "farm-anchor"
-version = "0.1.0"
+version = "0.2.0"
 description = "Anchor bindings for the farm native instruction."
 homepage = "https://raydium.io/"
 repository = "https://github.com/raydium-io/raydium-contract-instructions"
@@ -16,7 +16,7 @@ no-entrypoint = []
 cpi = ["no-entrypoint"]
 
 [dependencies]
-anchor-lang = "0.28.0"
-solana-program = "~1.14.6"
-spl-token = { version="3.5.0", features = [ "no-entrypoint" ] }
+anchor-lang = "0.29.0"
+solana-program = "1.17.15"
+spl-token = { version="4.0.0", features = [ "no-entrypoint" ] }
 raydium-contract-instructions = { path = "../lib"}
