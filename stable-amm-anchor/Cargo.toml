@@ -16,7 +16,6 @@ no-entrypoint = []
 cpi = ["no-entrypoint"]
 
 [dependencies]
-anchor-lang = "0.28.0"
-solana-program = "~1.14.6"
-spl-token = { version="3.5.0", features = [ "no-entrypoint" ] }
-raydium-contract-instructions = { path = "../lib"}
+anchor-lang = "0.29.0"
+anchor-spl = { version = "0.29.0" }
+raydium-contract-instructions = { path = "../lib" }
