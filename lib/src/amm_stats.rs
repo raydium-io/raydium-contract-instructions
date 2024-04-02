@@ -8,6 +8,14 @@ pub enum AmmStatus {
     Initialized = 1u64,
     Disabled = 2u64,
     WithdrawOnly = 3u64,
+    // pool only can add or remove liquidity, can't swap and plan orders
+    LiquidityOnly = 4u64,
+    // pool only can add or remove liquidity and plan orders, can't swap
+    OrderBookOnly = 5u64,
+    // pool only can add or remove liquidity and swap, can't plan orders
+    SwapOnly = 6u64,
+    // pool status after created and will auto update to SwapOnly during swap after open_time
+    WaitingTrade = 7u64,
 }
 
 #[repr(u64)]
@@ -19,7 +27,6 @@ pub enum AmmState {
     CancelOrderState = 4u64,
     PlaceOrdersState = 5u64,
     PurgeOrderState = 6u64,
-    WithdrawTransferState = 7u64,
 }
 
 #[cfg_attr(feature = "client", derive(Debug))]
@@ -92,49 +99,53 @@ pub struct AmmInfo {
     pub total_pnl_pc: u64,
     /// total pnl coin
     pub total_pnl_coin: u64,
-    /// pool total deposit pc
-    pub pool_total_deposit_pc: u128,
-    /// pool total deposit coin
-    pub pool_total_deposit_coin: u128,
+    /// ido pool open time
+    pub pool_open_time: u64,
+    /// padding for future updates
+    pub padding: [u64; 2],
+    /// switch from orderbookonly to init
+    pub orderbook_to_init_time: u64,
 
     /// swap coin in amount
     pub swap_coin_in_amount: u128,
     /// swap pc out amount
     pub swap_pc_out_amount: u128,
-    /// swap coin to pc fee
-    pub swap_coin2pc_fee: u64,
+    /// charge pc as swap fee while swap pc to coin
+    pub swap_acc_pc_fee: u64,
 
     /// swap pc in amount
     pub swap_pc_in_amount: u128,
     /// swap coin out amount
     pub swap_coin_out_amount: u128,
-    /// swap pc to coin fee
-    pub swap_pc2coin_fee: u64,
+    /// charge coin as swap fee while swap coin to pc
+    pub swap_acc_coin_fee: u64,
 
-    /// Token coin
-    pub token_coin: Pubkey,
-    /// Token pc
-    pub token_pc: Pubkey,
-    /// Coin mint
-    pub coin_mint: Pubkey,
-    /// Pc mint
-    pub pc_mint: Pubkey,
+    /// Coin vault
+    pub coin_vault: Pubkey,
+    /// Pc vault
+    pub pc_vault: Pubkey,
+    /// Coin vault mint
+    pub coin_vault_mint: Pubkey,
+    /// Pc vault mint
+    pub pc_vault_mint: Pubkey,
     /// lp mint
     pub lp_mint: Pubkey,
     /// open_orders key
     pub open_orders: Pubkey,
     /// market key
     pub market: Pubkey,
-    /// serum dex key
-    pub serum_dex: Pubkey,
+    /// market program key
+    pub market_program: Pubkey,
     /// target_orders key
     pub target_orders: Pubkey,
-    /// withdraw key
-    pub withdraw_queue: Pubkey,
-    /// temp lp key
-    pub token_temp_lp: Pubkey,
+    /// padding
+    pub padding1: [u64; 8],
     /// amm owner key
     pub amm_owner: Pubkey,
-    /// pnl_owner key
-    pub pnl_owner: Pubkey,
+    /// pool lp amount
+    pub lp_amount: u64,
+    /// client order id
+    pub client_order_id: u64,
+    /// padding
+    pub padding2: [u64; 2],
 }

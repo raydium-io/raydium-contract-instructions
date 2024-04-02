@@ -9,18 +9,15 @@ declare_id!("B584oELyjhQAJdR6UVyb7XUHpbTLwrH6oLbjnh4QpjhN");
 pub mod amm_proxy {
     use super::*;
 
-    /// Pre initiazlize a swap pool
-    pub fn proxy_pre_initialize(ctx: Context<ProxyPreInitialize>, nonce: u8) -> Result<()> {
-        instructions::pre_initialize(ctx, nonce)
-    }
-
     /// Initiazlize a swap pool
     pub fn proxy_initialize(
         ctx: Context<ProxyInitialize>,
         nonce: u8,
         open_time: u64,
+        init_pc_amount: u64,
+        init_coin_amount: u64,
     ) -> Result<()> {
-        instructions::initialize(ctx, nonce, open_time)
+        instructions::initialize(ctx, nonce, open_time, init_pc_amount, init_coin_amount)
     }
 
     /// deposit instruction

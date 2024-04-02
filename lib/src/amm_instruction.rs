@@ -81,42 +81,35 @@ pub struct SwapInstructionBaseOut {
 #[repr(C)]
 #[derive(Clone, Debug, PartialEq)]
 pub enum AmmInstruction {
-    ///   Initializes a new AmmInfo.
+    //   Initializes a new AmmInfo.
     ///
-    ///   0. `[]` Spl Token program id
-    ///   1. `[writable, signer]` New amm Account to create.
-    ///   2. `[]` $authority derived from `create_program_address(&[amm Account])`
-    ///   3. `[]` amm open_orders Account
-    ///   4. `[writable]` pool lp mint address. Must be empty, owned by $authority.
-    ///   5. `[]` coin mint address
-    ///   6. `[]` pc mint address
-    ///   7. `[]` pool_token_coin Account. Must be non zero, owned by $authority.
-    ///   8. `[]` pool_token_pc Account. Must be non zero, owned by $authority.
-    ///   9. '[writable]` withdraw queue Account. To save withdraw dest_coin & dest_pc account with must cancle orders.
-    ///   10. `[writable]` token_dest_lp Account. To deposit the initial pool token supply, user is the owner.
-    ///   11. `[writable]` token_temp_lp Account. To save withdraw lp with must cancle orders as temp to transfer later.
-    ///   12. `[]` serum dex program id
-    ///   13. `[]` serum market Account. serum_dex program is the owner.
+    ///   Not supported yet, please use `Initialize2` to new a AMM pool
+    #[deprecated(note = "Not supported yet, please use `Initialize2` instead")]
     Initialize(InitializeInstruction),
 
-    ///   Continue Initializes the new AmmInfo.
+    ///   Initializes a new AMM pool.
     ///
     ///   0. `[]` Spl Token program id
-    ///   1. `[]` Rent program id
-    ///   2. `[writable, signer]` Continue to init amm Account.
-    ///   3. `[]` $authority derived from `create_program_address(&[amm Account])`
-    ///   4. `[writable]` amm open_orders Account
-    ///   5. `[writable]` pool_token_coin Account. Must be non zero, owned by $authority.
-    ///   6. `[writable]` pool_token_pc Account. Must be non zero, owned by $authority.
-    ///   7. `[writable]` amm target_orders Account. To store plan orders infomations.
-    ///   8. `[]` serum dex program id
-    ///   9. `[writable]` serum market Account. serum_dex program is the owner.
-    ///   10. `[writable]` coin_vault Account
-    ///   11. `[writable]` pc_vault Account
-    ///   12. '[writable]` req_q Account
-    ///   13. `[writable]` event_q Account
-    ///   14. `[writable]` bids Account
-    ///   15. `[writable]` asks Account
+    ///   1. `[]` Associated Token program id
+    ///   2. `[]` Sys program id
+    ///   3. `[]` Rent program id
+    ///   4. `[writable]` New AMM Account to create.
+    ///   5. `[]` $authority derived from `create_program_address(&[AUTHORITY_AMM, &[nonce]])`.
+    ///   6. `[writable]` AMM open orders Account
+    ///   7. `[writable]` AMM lp mint Account
+    ///   8. `[]` AMM coin mint Account
+    ///   9. `[]` AMM pc mint Account
+    ///   10. `[writable]` AMM coin vault Account. Must be non zero, owned by $authority.
+    ///   11. `[writable]` AMM pc vault Account. Must be non zero, owned by $authority.
+    ///   12. `[writable]` AMM target orders Account. To store plan orders informations.
+    ///   13. `[]` AMM config Account, derived from `find_program_address(&[&&AMM_CONFIG_SEED])`.
+    ///   14. `[]` AMM create pool fee destination Account
+    ///   15. `[]` Market program id
+    ///   16. `[writable]` Market Account. Market program is the owner.
+    ///   17. `[writable, singer]` User wallet Account
+    ///   18. `[]` User token coin Account
+    ///   19. '[]` User token pc Account
+    ///   20. `[writable]` User destination lp token ATA Account
     Initialize2(InitializeInstruction2),
 
     Reserved0,
@@ -125,41 +118,43 @@ pub enum AmmInstruction {
     ///   into the pool. Inputs are converted to the current ratio.
     ///
     ///   0. `[]` Spl Token program id
-    ///   1. `[writable]` amm Account
-    ///   2. `[]` $authority
-    ///   3. `[]` amm open_orders Account
-    ///   4. `[writable]` amm target_orders Account. To store plan orders infomations.
-    ///   5. `[writable]` pool lp mint address. Must be empty, owned by $authority.
-    ///   6. `[writable]` pool_token_coin $authority can transfer amount,
-    ///   7. `[writable]` pool_token_pc $authority can transfer amount,
-    ///   8. `[]` serum market Account. serum_dex program is the owner.
-    ///   9. `[writable]` user coin token Base Account to deposit into.
-    ///   10. `[writable]` user pc token Base Account to deposit into.
-    ///   11. `[writable]` user lp token. To deposit the generated tokens, user is the owner.
-    ///   12. '[signer]` user owner Account
+    ///   1. `[writable]` AMM Account
+    ///   2. `[]` $authority derived from `create_program_address(&[AUTHORITY_AMM, &[nonce]])`.
+    ///   3. `[]` AMM open_orders Account
+    ///   4. `[writable]` AMM target orders Account. To store plan orders infomations.
+    ///   5. `[writable]` AMM lp mint Account. Owned by $authority.
+    ///   6. `[writable]` AMM coin vault $authority can transfer amount,
+    ///   7. `[writable]` AMM pc vault $authority can transfer amount,
+    ///   8. `[]` Market Account. Market program is the owner.
+    ///   9. `[writable]` User coin token Account to deposit into.
+    ///   10. `[writable]` User pc token Account to deposit into.
+    ///   11. `[writable]` User lp token. To deposit the generated tokens, user is the owner.
+    ///   12. '[signer]` User wallet Account
+    ///   13. `[]` Market event queue Account.
     Deposit(DepositInstruction),
 
-    ///   Withdraw the token from the pool at the current ratio.
+    ///   Withdraw the vault tokens from the pool at the current ratio.
     ///
     ///   0. `[]` Spl Token program id
-    ///   1. `[writable]` amm Account
-    ///   2. `[]` $authority
-    ///   3. `[writable]` amm open_orders Account
-    ///   4. `[writable]` amm target_orders Account
-    ///   5. `[writable]` pool lp mint address. Must be empty, owned by $authority.
-    ///   6. `[writable]` pool_token_coin Amm Account to withdraw FROM,
-    ///   7. `[writable]` pool_token_pc Amm Account to withdraw FROM,
-    ///   8. `[writable]` withdraw queue Account
-    ///   9. `[writable]` token_temp_lp Account
-    ///   10. `[]` serum dex program id
-    ///   11. `[writable]` serum market Account. serum_dex program is the owner.
-    ///   12. `[writable]` coin_vault Account
-    ///   13. `[writable]` pc_vault Account
-    ///   14. '[]` vault_signer Account
-    ///   15. `[writable]` user lp token Account. Source lp, amount is transferable by $authority.
-    ///   16. `[writable]` user token coin Account. user Account to credit.
-    ///   17. `[writable]` user token pc Account. user Account to credit.
-    ///   18. `[singer]` user owner Account
+    ///   1. `[writable]` AMM Account
+    ///   2. `[]` $authority derived from `create_program_address(&[AUTHORITY_AMM, &[nonce]])`.
+    ///   3. `[writable]` AMM open orders Account
+    ///   4. `[writable]` AMM target orders Account
+    ///   5. `[writable]` AMM lp mint Account. Owned by $authority.
+    ///   6. `[writable]` AMM coin vault Account to withdraw FROM,
+    ///   7. `[writable]` AMM pc vault Account to withdraw FROM,
+    ///   8. `[]` Market program id
+    ///   9. `[writable]` Market Account. Market program is the owner.
+    ///   10. `[writable]` Market coin vault Account
+    ///   11. `[writable]` Market pc vault Account
+    ///   12. '[]` Market vault signer Account
+    ///   13. `[writable]` User lp token Account.
+    ///   14. `[writable]` User token coin Account. user Account to credit.
+    ///   15. `[writable]` User token pc Account. user Account to credit.
+    ///   16. `[singer]` User wallet Account
+    ///   17. `[writable]` Market event queue Account
+    ///   18. `[writable]` Market bids Account
+    ///   19. `[writable]` Market asks Account
     Withdraw(WithdrawInstruction),
 
     Reserved1,
@@ -170,50 +165,53 @@ pub enum AmmInstruction {
 
     Reserved4,
 
-    /// Swap coin or pc from pool
+    /// Swap coin or pc from pool, base amount_in with a slippage of minimum_amount_out
     ///
     ///   0. `[]` Spl Token program id
-    ///   1. `[writable]` amm Account
-    ///   2. `[]` $authority
-    ///   3. `[writable]` amm open_orders Account
-    ///   4. `[writable]` amm target_orders Account
-    ///   5. `[writable]` pool_token_coin Amm Account to swap FROM or To,
-    ///   6. `[writable]` pool_token_pc Amm Account to swap FROM or To,
-    ///   7. `[]` serum dex program id
-    ///   8. `[writable]` serum market Account. serum_dex program is the owner.
-    ///   9. `[writable]` bids Account
-    ///   10. `[writable]` asks Account
-    ///   11. `[writable]` event_q Account
-    ///   12. `[writable]` coin_vault Account
-    ///   13. `[writable]` pc_vault Account
-    ///   14. '[]` vault_signer Account
-    ///   15. `[writable]` user source token Account. user Account to swap from.
-    ///   16. `[writable]` user destination token Account. user Account to swap to.
-    ///   17. `[singer]` user owner Account
+    ///   1. `[writable]` AMM Account
+    ///   2. `[]` $authority derived from `create_program_address(&[AUTHORITY_AMM, &[nonce]])`.
+    ///   3. `[writable]` AMM open orders Account
+    ///   4. `[writable]` (optional)AMM target orders Account, no longer used in the contract, recommended no need to add this Account.
+    ///   5. `[writable]` AMM coin vault Account to swap FROM or To.
+    ///   6. `[writable]` AMM pc vault Account to swap FROM or To.
+    ///   7. `[]` Market program id
+    ///   8. `[writable]` Market Account. Market program is the owner.
+    ///   9. `[writable]` Market bids Account
+    ///   10. `[writable]` Market asks Account
+    ///   11. `[writable]` Market event queue Account
+    ///   12. `[writable]` Market coin vault Account
+    ///   13. `[writable]` Market pc vault Account
+    ///   14. '[]` Market vault signer Account
+    ///   15. `[writable]` User source token Account.
+    ///   16. `[writable]` User destination token Account.
+    ///   17. `[singer]` User wallet Account
     SwapBaseIn(SwapInstructionBaseIn),
 
+    ///   Continue Initializes a new Amm pool because of compute units limit.
+    ///   Not supported yet, please use `Initialize2` to new a Amm pool
+    #[deprecated(note = "Not supported yet, please use `Initialize2` instead")]
     PreInitialize(PreInitializeInstruction),
 
     /// Swap coin or pc from pool, base amount_out with a slippage of max_amount_in
     ///
     ///   0. `[]` Spl Token program id
-    ///   1. `[writable]` amm Account
-    ///   2. `[]` $authority
-    ///   3. `[writable]` amm open_orders Account
-    ///   4. `[writable]` amm target_orders Account
-    ///   5. `[writable]` pool_token_coin Amm Account to swap FROM or To,
-    ///   6. `[writable]` pool_token_pc Amm Account to swap FROM or To,
-    ///   7. `[]` serum dex program id
-    ///   8. `[writable]` serum market Account. serum_dex program is the owner.
-    ///   9. `[writable]` bids Account
-    ///   10. `[writable]` asks Account
-    ///   11. `[writable]` event_q Account
-    ///   12. `[writable]` coin_vault Account
-    ///   13. `[writable]` pc_vault Account
-    ///   14. '[]` vault_signer Account
-    ///   15. `[writable]` user source token Account. user Account to swap from.
-    ///   16. `[writable]` user destination token Account. user Account to swap to.
-    ///   17. `[singer]` user owner Account
+    ///   1. `[writable]` AMM Account
+    ///   2. `[]` $authority derived from `create_program_address(&[AUTHORITY_AMM, &[nonce]])`.
+    ///   3. `[writable]` AMM open orders Account
+    ///   4. `[writable]` (optional)AMM target orders Account, no longer used in the contract, recommended no need to add this Account.
+    ///   5. `[writable]` AMM coin vault Account to swap FROM or To.
+    ///   6. `[writable]` AMM pc vault Account to swap FROM or To.
+    ///   7. `[]` Market program id
+    ///   8. `[writable]` Market Account. Market program is the owner.
+    ///   9. `[writable]` Market bids Account
+    ///   10. `[writable]` Market asks Account
+    ///   11. `[writable]` Market event queue Account
+    ///   12. `[writable]` Market coin vault Account
+    ///   13. `[writable]` Market pc vault Account
+    ///   14. '[]` Market vault signer Account
+    ///   15. `[writable]` User source token Account.
+    ///   16. `[writable]` User destination token Account.
+    ///   17. `[singer]` User wallet Account
     SwapBaseOut(SwapInstructionBaseOut),
 
     Reserved5,
@@ -226,11 +224,6 @@ impl AmmInstruction {
             .split_first()
             .ok_or(ProgramError::InvalidInstructionData)?;
         Ok(match tag {
-            0 => {
-                let (nonce, rest) = Self::unpack_u8(rest)?;
-                let (open_time, _rest) = Self::unpack_u64(rest)?;
-                Self::Initialize(InitializeInstruction { nonce, open_time })
-            }
             1 => {
                 let (nonce, rest) = Self::unpack_u8(rest)?;
                 let (open_time, rest) = Self::unpack_u64(rest)?;
@@ -266,10 +259,6 @@ impl AmmInstruction {
                     amount_in,
                     minimum_amount_out,
                 })
-            }
-            10 => {
-                let (nonce, _rest) = Self::unpack_u8(rest)?;
-                Self::PreInitialize(PreInitializeInstruction { nonce })
             }
             11 => {
                 let (max_amount_in, rest) = Self::unpack_u64(rest)?;
@@ -316,11 +305,6 @@ impl AmmInstruction {
     pub fn pack(&self) -> Result<Vec<u8>, ProgramError> {
         let mut buf = Vec::with_capacity(size_of::<Self>());
         match &*self {
-            Self::Initialize(InitializeInstruction { nonce, open_time }) => {
-                buf.push(0);
-                buf.push(*nonce);
-                buf.extend_from_slice(&open_time.to_le_bytes());
-            }
             Self::Initialize2(InitializeInstruction2 {
                 nonce,
                 open_time,
@@ -356,10 +340,6 @@ impl AmmInstruction {
                 buf.extend_from_slice(&amount_in.to_le_bytes());
                 buf.extend_from_slice(&minimum_amount_out.to_le_bytes());
             }
-            Self::PreInitialize(PreInitializeInstruction { nonce }) => {
-                buf.push(10);
-                buf.push(*nonce);
-            }
             Self::SwapBaseOut(SwapInstructionBaseOut {
                 max_amount_in,
                 amount_out,
@@ -374,131 +354,26 @@ impl AmmInstruction {
     }
 }
 
-/// Creates an 'preinitialize' instruction.
-pub fn pre_initialize(
-    program_id: &Pubkey,
-    amm_target_orders: &Pubkey,
-    pool_withdraw_queue: &Pubkey,
-    amm_authority: &Pubkey,
-    lp_mint_address: &Pubkey,
-    coin_mint_address: &Pubkey,
-    pc_mint_address: &Pubkey,
-    pool_coin_token_account: &Pubkey,
-    pool_pc_token_account: &Pubkey,
-    pool_temp_lp_token_account: &Pubkey,
-    serum_market: &Pubkey,
-    user_wallet: &Pubkey,
-
-    nonce: u8,
-) -> Result<Instruction, ProgramError> {
-    let init_data = AmmInstruction::PreInitialize(PreInitializeInstruction { nonce });
-    let data = init_data.pack()?;
-
-    let accounts = vec![
-        // spl token
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
-        // amm account
-        AccountMeta::new(*amm_target_orders, false),
-        AccountMeta::new(*pool_withdraw_queue, false),
-        AccountMeta::new_readonly(*amm_authority, false),
-        AccountMeta::new(*lp_mint_address, false),
-        AccountMeta::new_readonly(*coin_mint_address, false),
-        AccountMeta::new_readonly(*pc_mint_address, false),
-        AccountMeta::new(*pool_coin_token_account, false),
-        AccountMeta::new(*pool_pc_token_account, false),
-        AccountMeta::new(*pool_temp_lp_token_account, false),
-        // serum
-        AccountMeta::new_readonly(*serum_market, false),
-        // user wallet
-        AccountMeta::new(*user_wallet, true),
-    ];
-
-    Ok(Instruction {
-        program_id: *program_id,
-        accounts,
-        data,
-    })
-}
-
-/// Creates an 'initialize' instruction.
-pub fn initialize(
-    program_id: &Pubkey,
-    amm_id: &Pubkey,
-    amm_authority: &Pubkey,
-    amm_open_orders: &Pubkey,
-    lp_mint_address: &Pubkey,
-    coin_mint_address: &Pubkey,
-    pc_mint_address: &Pubkey,
-    pool_coin_token_account: &Pubkey,
-    pool_pc_token_account: &Pubkey,
-    pool_withdraw_queue: &Pubkey,
-    pool_target_orders_account: &Pubkey,
-    pool_lp_token_account: &Pubkey,
-    pool_temp_lp_token_account: &Pubkey,
-    serum_program_id: &Pubkey,
-    serum_market: &Pubkey,
-    user_wallet: &Pubkey,
-
-    nonce: u8,
-    open_time: u64,
-) -> Result<Instruction, ProgramError> {
-    let init_data = AmmInstruction::Initialize(InitializeInstruction { nonce, open_time });
-    let data = init_data.pack()?;
-
-    let accounts = vec![
-        // spl token
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
-        // amm
-        AccountMeta::new(*amm_id, false),
-        AccountMeta::new_readonly(*amm_authority, false),
-        AccountMeta::new(*amm_open_orders, false),
-        AccountMeta::new(*lp_mint_address, false),
-        AccountMeta::new_readonly(*coin_mint_address, false),
-        AccountMeta::new_readonly(*pc_mint_address, false),
-        AccountMeta::new_readonly(*pool_coin_token_account, false),
-        AccountMeta::new_readonly(*pool_pc_token_account, false),
-        AccountMeta::new(*pool_withdraw_queue, false),
-        AccountMeta::new(*pool_target_orders_account, false),
-        AccountMeta::new(*pool_lp_token_account, false),
-        AccountMeta::new_readonly(*pool_temp_lp_token_account, false),
-        // serum
-        AccountMeta::new_readonly(*serum_program_id, false),
-        AccountMeta::new_readonly(*serum_market, false),
-        // user wallet
-        AccountMeta::new(*user_wallet, true),
-    ];
-
-    Ok(Instruction {
-        program_id: *program_id,
-        accounts,
-        data,
-    })
-}
-
 /// Creates an 'initialize2' instruction.
 pub fn initialize2(
-    program_id: &Pubkey,
-    amm_id: &Pubkey,
+    amm_program: &Pubkey,
+    amm_pool: &Pubkey,
     amm_authority: &Pubkey,
     amm_open_orders: &Pubkey,
-    lp_mint_key: &Pubkey,
-    coin_mint_key: &Pubkey,
-    pc_mint_key: &Pubkey,
-    pool_coin_token_account: &Pubkey,
-    pool_pc_token_account: &Pubkey,
-    pool_withdraw_queue: &Pubkey,
+    amm_lp_mint: &Pubkey,
+    amm_coin_mint: &Pubkey,
+    amm_pc_mint: &Pubkey,
+    amm_coin_vault: &Pubkey,
+    amm_pc_vault: &Pubkey,
     amm_target_orders: &Pubkey,
-    pool_temp_lp_key: &Pubkey,
-    serum_program_id: &Pubkey,
-    serum_market: &Pubkey,
+    amm_config: &Pubkey,
+    create_fee_destination: &Pubkey,
+    market_program: &Pubkey,
+    market: &Pubkey,
     user_wallet: &Pubkey,
     user_token_coin: &Pubkey,
     user_token_pc: &Pubkey,
-    user_lp_token_account: &Pubkey,
+    user_token_lp: &Pubkey,
     nonce: u8,
     open_time: u64,
     init_pc_amount: u64,
@@ -513,35 +388,35 @@ pub fn initialize2(
     let data = init_data.pack()?;
 
     let accounts = vec![
-        // spl
+        // spl & sys
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
         // amm
-        AccountMeta::new(*amm_id, false),
+        AccountMeta::new(*amm_pool, false),
         AccountMeta::new_readonly(*amm_authority, false),
         AccountMeta::new(*amm_open_orders, false),
-        AccountMeta::new(*lp_mint_key, false),
-        AccountMeta::new_readonly(*coin_mint_key, false),
-        AccountMeta::new_readonly(*pc_mint_key, false),
-        AccountMeta::new(*pool_coin_token_account, false),
-        AccountMeta::new(*pool_pc_token_account, false),
-        AccountMeta::new(*pool_withdraw_queue, false),
+        AccountMeta::new(*amm_lp_mint, false),
+        AccountMeta::new_readonly(*amm_coin_mint, false),
+        AccountMeta::new_readonly(*amm_pc_mint, false),
+        AccountMeta::new(*amm_coin_vault, false),
+        AccountMeta::new(*amm_pc_vault, false),
         AccountMeta::new(*amm_target_orders, false),
-        AccountMeta::new(*pool_temp_lp_key, false),
-        // serum
-        AccountMeta::new_readonly(*serum_program_id, false),
-        AccountMeta::new_readonly(*serum_market, false),
+        AccountMeta::new_readonly(*amm_config, false),
+        AccountMeta::new(*create_fee_destination, false),
+        // market
+        AccountMeta::new_readonly(*market_program, false),
+        AccountMeta::new_readonly(*market, false),
         // user wallet
         AccountMeta::new(*user_wallet, true),
         AccountMeta::new(*user_token_coin, false),
         AccountMeta::new(*user_token_pc, false),
-        AccountMeta::new(*user_lp_token_account, false),
+        AccountMeta::new(*user_token_lp, false),
     ];
 
     Ok(Instruction {
-        program_id: *program_id,
+        program_id: *amm_program,
         accounts,
         data,
     })
@@ -549,21 +424,20 @@ pub fn initialize2(
 
 /// Creates a 'deposit' instruction.
 pub fn deposit(
-    program_id: &Pubkey,
-    amm_id: &Pubkey,
+    amm_program: &Pubkey,
+    amm_pool: &Pubkey,
     amm_authority: &Pubkey,
     amm_open_orders: &Pubkey,
     amm_target_orders: &Pubkey,
-    lp_mint_address: &Pubkey,
-    pool_coin_token_account: &Pubkey,
-    pool_pc_token_account: &Pubkey,
-    serum_market: &Pubkey,
-    serum_event_queue: &Pubkey,
-    user_coin_token_account: &Pubkey,
-    user_pc_token_account: &Pubkey,
-    user_lp_token_account: &Pubkey,
+    amm_lp_mint: &Pubkey,
+    amm_coin_vault: &Pubkey,
+    amm_pc_vault: &Pubkey,
+    market: &Pubkey,
+    market_event_queue: &Pubkey,
+    user_token_coin: &Pubkey,
+    user_token_pc: &Pubkey,
+    user_token_lp: &Pubkey,
     user_owner: &Pubkey,
-
     max_coin_amount: u64,
     max_pc_amount: u64,
     base_side: u64,
@@ -579,25 +453,25 @@ pub fn deposit(
         // spl token
         AccountMeta::new_readonly(spl_token::id(), false),
         // amm
-        AccountMeta::new(*amm_id, false),
+        AccountMeta::new(*amm_pool, false),
         AccountMeta::new_readonly(*amm_authority, false),
         AccountMeta::new_readonly(*amm_open_orders, false),
         AccountMeta::new(*amm_target_orders, false),
-        AccountMeta::new(*lp_mint_address, false),
-        AccountMeta::new(*pool_coin_token_account, false),
-        AccountMeta::new(*pool_pc_token_account, false),
-        // serum
-        AccountMeta::new_readonly(*serum_market, false),
+        AccountMeta::new(*amm_lp_mint, false),
+        AccountMeta::new(*amm_coin_vault, false),
+        AccountMeta::new(*amm_pc_vault, false),
+        // market
+        AccountMeta::new_readonly(*market, false),
         // user
-        AccountMeta::new(*user_coin_token_account, false),
-        AccountMeta::new(*user_pc_token_account, false),
-        AccountMeta::new(*user_lp_token_account, false),
+        AccountMeta::new(*user_token_coin, false),
+        AccountMeta::new(*user_token_pc, false),
+        AccountMeta::new(*user_token_lp, false),
         AccountMeta::new_readonly(*user_owner, true),
-        AccountMeta::new_readonly(*serum_event_queue, false),
+        AccountMeta::new_readonly(*market_event_queue, false),
     ];
 
     Ok(Instruction {
-        program_id: *program_id,
+        program_id: *amm_program,
         accounts,
         data,
     })
@@ -605,66 +479,66 @@ pub fn deposit(
 
 /// Creates a 'withdraw' instruction.
 pub fn withdraw(
-    program_id: &Pubkey,
-    amm_id: &Pubkey,
+    amm_program: &Pubkey,
+    amm_pool: &Pubkey,
     amm_authority: &Pubkey,
     amm_open_orders: &Pubkey,
     amm_target_orders: &Pubkey,
-    lp_mint_address: &Pubkey,
-    pool_coin_token_account: &Pubkey,
-    pool_pc_token_account: &Pubkey,
-    pool_withdraw_queue: &Pubkey,
-    pool_temp_lp_token_account: &Pubkey,
-    serum_program_id: &Pubkey,
-    serum_market: &Pubkey,
-    serum_coin_vault_account: &Pubkey,
-    serum_pc_vault_account: &Pubkey,
-    serum_vault_signer: &Pubkey,
-    user_lp_token_account: &Pubkey,
-    uer_coin_token_account: &Pubkey,
-    uer_pc_token_account: &Pubkey,
+    amm_lp_mint: &Pubkey,
+    amm_coin_vault: &Pubkey,
+    amm_pc_vault: &Pubkey,
+    market_program: &Pubkey,
+    market: &Pubkey,
+    market_coin_vault: &Pubkey,
+    market_pc_vault: &Pubkey,
+    market_vault_signer: &Pubkey,
+    user_token_lp: &Pubkey,
+    user_token_coin: &Pubkey,
+    user_token_pc: &Pubkey,
     user_owner: &Pubkey,
+    market_event_queue: &Pubkey,
+    market_bids: &Pubkey,
+    market_asks: &Pubkey,
 
-    serum_event_q: &Pubkey,
-    serum_bids: &Pubkey,
-    serum_asks: &Pubkey,
-    // lp amount
+    referrer_pc_account: Option<&Pubkey>,
+
     amount: u64,
 ) -> Result<Instruction, ProgramError> {
     let data = AmmInstruction::Withdraw(WithdrawInstruction { amount }).pack()?;
 
-    let accounts = vec![
+    let mut accounts = vec![
         // spl token
         AccountMeta::new_readonly(spl_token::id(), false),
         // amm
-        AccountMeta::new(*amm_id, false),
+        AccountMeta::new(*amm_pool, false),
         AccountMeta::new_readonly(*amm_authority, false),
         AccountMeta::new(*amm_open_orders, false),
         AccountMeta::new(*amm_target_orders, false),
-        AccountMeta::new(*lp_mint_address, false),
-        AccountMeta::new(*pool_coin_token_account, false),
-        AccountMeta::new(*pool_pc_token_account, false),
-        AccountMeta::new(*pool_withdraw_queue, false),
-        AccountMeta::new(*pool_temp_lp_token_account, false),
-        // serum
-        AccountMeta::new_readonly(*serum_program_id, false),
-        AccountMeta::new(*serum_market, false),
-        AccountMeta::new(*serum_coin_vault_account, false),
-        AccountMeta::new(*serum_pc_vault_account, false),
-        AccountMeta::new_readonly(*serum_vault_signer, false),
+        AccountMeta::new(*amm_lp_mint, false),
+        AccountMeta::new(*amm_coin_vault, false),
+        AccountMeta::new(*amm_pc_vault, false),
+        // market
+        AccountMeta::new_readonly(*market_program, false),
+        AccountMeta::new(*market, false),
+        AccountMeta::new(*market_coin_vault, false),
+        AccountMeta::new(*market_pc_vault, false),
+        AccountMeta::new_readonly(*market_vault_signer, false),
         // user
-        AccountMeta::new(*user_lp_token_account, false),
-        AccountMeta::new(*uer_coin_token_account, false),
-        AccountMeta::new(*uer_pc_token_account, false),
+        AccountMeta::new(*user_token_lp, false),
+        AccountMeta::new(*user_token_coin, false),
+        AccountMeta::new(*user_token_pc, false),
         AccountMeta::new_readonly(*user_owner, true),
-        // serum
-        AccountMeta::new(*serum_event_q, false),
-        AccountMeta::new(*serum_bids, false),
-        AccountMeta::new(*serum_asks, false),
+        AccountMeta::new(*market_event_queue, false),
+        AccountMeta::new(*market_bids, false),
+        AccountMeta::new(*market_asks, false),
     ];
 
+    if let Some(referrer_pc_key) = referrer_pc_account {
+        accounts.push(AccountMeta::new(*referrer_pc_key, false));
+    }
+
     Ok(Instruction {
-        program_id: *program_id,
+        program_id: *amm_program,
         accounts,
         data,
     })
@@ -672,23 +546,22 @@ pub fn withdraw(
 
 /// Creates a 'swap base in' instruction.
 pub fn swap_base_in(
-    program_id: &Pubkey,
-    amm_id: &Pubkey,
+    amm_program: &Pubkey,
+    amm_pool: &Pubkey,
     amm_authority: &Pubkey,
     amm_open_orders: &Pubkey,
-    amm_target_orders: &Pubkey,
-    pool_coin_token_account: &Pubkey,
-    pool_pc_token_account: &Pubkey,
-    serum_program_id: &Pubkey,
-    serum_market: &Pubkey,
-    serum_bids: &Pubkey,
-    serum_asks: &Pubkey,
-    serum_event_queue: &Pubkey,
-    serum_coin_vault_account: &Pubkey,
-    serum_pc_vault_account: &Pubkey,
-    serum_vault_signer: &Pubkey,
-    uer_source_token_account: &Pubkey,
-    uer_destination_token_account: &Pubkey,
+    amm_coin_vault: &Pubkey,
+    amm_pc_vault: &Pubkey,
+    market_program: &Pubkey,
+    market: &Pubkey,
+    market_bids: &Pubkey,
+    market_asks: &Pubkey,
+    market_event_queue: &Pubkey,
+    market_coin_vault: &Pubkey,
+    market_pc_vault: &Pubkey,
+    market_vault_signer: &Pubkey,
+    user_token_source: &Pubkey,
+    user_token_destination: &Pubkey,
     user_source_owner: &Pubkey,
 
     amount_in: u64,
@@ -704,29 +577,29 @@ pub fn swap_base_in(
         // spl token
         AccountMeta::new_readonly(spl_token::id(), false),
         // amm
-        AccountMeta::new(*amm_id, false),
+        AccountMeta::new(*amm_pool, false),
         AccountMeta::new_readonly(*amm_authority, false),
         AccountMeta::new(*amm_open_orders, false),
-        AccountMeta::new(*amm_target_orders, false),
-        AccountMeta::new(*pool_coin_token_account, false),
-        AccountMeta::new(*pool_pc_token_account, false),
-        // serum
-        AccountMeta::new_readonly(*serum_program_id, false),
-        AccountMeta::new(*serum_market, false),
-        AccountMeta::new(*serum_bids, false),
-        AccountMeta::new(*serum_asks, false),
-        AccountMeta::new(*serum_event_queue, false),
-        AccountMeta::new(*serum_coin_vault_account, false),
-        AccountMeta::new(*serum_pc_vault_account, false),
-        AccountMeta::new_readonly(*serum_vault_signer, false),
+        // AccountMeta::new(*amm_target_orders, false),
+        AccountMeta::new(*amm_coin_vault, false),
+        AccountMeta::new(*amm_pc_vault, false),
+        // market
+        AccountMeta::new_readonly(*market_program, false),
+        AccountMeta::new(*market, false),
+        AccountMeta::new(*market_bids, false),
+        AccountMeta::new(*market_asks, false),
+        AccountMeta::new(*market_event_queue, false),
+        AccountMeta::new(*market_coin_vault, false),
+        AccountMeta::new(*market_pc_vault, false),
+        AccountMeta::new_readonly(*market_vault_signer, false),
         // user
-        AccountMeta::new(*uer_source_token_account, false),
-        AccountMeta::new(*uer_destination_token_account, false),
+        AccountMeta::new(*user_token_source, false),
+        AccountMeta::new(*user_token_destination, false),
         AccountMeta::new_readonly(*user_source_owner, true),
     ];
 
     Ok(Instruction {
-        program_id: *program_id,
+        program_id: *amm_program,
         accounts,
         data,
     })
@@ -734,23 +607,22 @@ pub fn swap_base_in(
 
 /// Creates a 'swap base out' instruction.
 pub fn swap_base_out(
-    program_id: &Pubkey,
-    amm_id: &Pubkey,
+    amm_program: &Pubkey,
+    amm_pool: &Pubkey,
     amm_authority: &Pubkey,
     amm_open_orders: &Pubkey,
-    amm_target_orders: &Pubkey,
-    pool_coin_token_account: &Pubkey,
-    pool_pc_token_account: &Pubkey,
-    serum_program_id: &Pubkey,
-    serum_market: &Pubkey,
-    serum_bids: &Pubkey,
-    serum_asks: &Pubkey,
-    serum_event_queue: &Pubkey,
-    serum_coin_vault_account: &Pubkey,
-    serum_pc_vault_account: &Pubkey,
-    serum_vault_signer: &Pubkey,
-    uer_source_token_account: &Pubkey,
-    uer_destination_token_account: &Pubkey,
+    amm_coin_vault: &Pubkey,
+    amm_pc_vault: &Pubkey,
+    market_program: &Pubkey,
+    market: &Pubkey,
+    market_bids: &Pubkey,
+    market_asks: &Pubkey,
+    market_event_queue: &Pubkey,
+    market_coin_vault: &Pubkey,
+    market_pc_vault: &Pubkey,
+    market_vault_signer: &Pubkey,
+    user_token_source: &Pubkey,
+    user_token_destination: &Pubkey,
     user_source_owner: &Pubkey,
 
     max_amount_in: u64,
@@ -766,29 +638,29 @@ pub fn swap_base_out(
         // spl token
         AccountMeta::new_readonly(spl_token::id(), false),
         // amm
-        AccountMeta::new(*amm_id, false),
+        AccountMeta::new(*amm_pool, false),
         AccountMeta::new_readonly(*amm_authority, false),
         AccountMeta::new(*amm_open_orders, false),
-        AccountMeta::new(*amm_target_orders, false),
-        AccountMeta::new(*pool_coin_token_account, false),
-        AccountMeta::new(*pool_pc_token_account, false),
-        // serum
-        AccountMeta::new_readonly(*serum_program_id, false),
-        AccountMeta::new(*serum_market, false),
-        AccountMeta::new(*serum_bids, false),
-        AccountMeta::new(*serum_asks, false),
-        AccountMeta::new(*serum_event_queue, false),
-        AccountMeta::new(*serum_coin_vault_account, false),
-        AccountMeta::new(*serum_pc_vault_account, false),
-        AccountMeta::new_readonly(*serum_vault_signer, false),
+        // AccountMeta::new(*amm_target_orders, false),
+        AccountMeta::new(*amm_coin_vault, false),
+        AccountMeta::new(*amm_pc_vault, false),
+        // market
+        AccountMeta::new_readonly(*market_program, false),
+        AccountMeta::new(*market, false),
+        AccountMeta::new(*market_bids, false),
+        AccountMeta::new(*market_asks, false),
+        AccountMeta::new(*market_event_queue, false),
+        AccountMeta::new(*market_coin_vault, false),
+        AccountMeta::new(*market_pc_vault, false),
+        AccountMeta::new_readonly(*market_vault_signer, false),
         // user
-        AccountMeta::new(*uer_source_token_account, false),
-        AccountMeta::new(*uer_destination_token_account, false),
+        AccountMeta::new(*user_token_source, false),
+        AccountMeta::new(*user_token_destination, false),
         AccountMeta::new_readonly(*user_source_owner, true),
     ];
 
     Ok(Instruction {
-        program_id: *program_id,
+        program_id: *amm_program,
         accounts,
         data,
     })

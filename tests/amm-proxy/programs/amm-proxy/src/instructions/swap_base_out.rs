@@ -1,59 +1,63 @@
 use amm_anchor::SwapBaseOut;
 use anchor_lang::prelude::*;
+use anchor_spl::token::Token;
 
 #[derive(Accounts, Clone)]
 pub struct ProxySwapBaseOut<'info> {
     /// CHECK: Safe
     pub amm_program: AccountInfo<'info>,
-    /// CHECK: Safe
+    /// CHECK: Safe. amm Account
     #[account(mut)]
-    pub amm: AccountInfo<'info>,
-    /// CHECK: Safe
-    pub amm_authority: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub amm: UncheckedAccount<'info>,
+    /// CHECK: Safe. Amm authority Account
+    #[account(
+        seeds = [b"amm authority"],
+        bump,
+    )]
+    pub amm_authority: UncheckedAccount<'info>,
+    /// CHECK: Safe. amm open_orders Account
     #[account(mut)]
-    pub amm_open_orders: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub amm_open_orders: UncheckedAccount<'info>,
+    /// CHECK: Safe. amm_coin_vault Amm Account to swap FROM or To,
     #[account(mut)]
-    pub amm_target_orders: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub amm_coin_vault: UncheckedAccount<'info>,
+    /// CHECK: Safe. amm_pc_vault Amm Account to swap FROM or To,
     #[account(mut)]
-    pub pool_coin_token_account: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub amm_pc_vault: UncheckedAccount<'info>,
+    /// CHECK: Safe. OpenBook program id
+    pub market_program: UncheckedAccount<'info>,
+    /// CHECK: Safe. OpenBook market Account. OpenBook program is the owner.
     #[account(mut)]
-    pub pool_pc_token_account: AccountInfo<'info>,
-    /// CHECK: Safe
-    pub serum_program: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub market: UncheckedAccount<'info>,
+    /// CHECK: Safe. bids Account
     #[account(mut)]
-    pub serum_market: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub market_bids: UncheckedAccount<'info>,
+    /// CHECK: Safe. asks Account
     #[account(mut)]
-    pub serum_bids: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub market_asks: UncheckedAccount<'info>,
+    /// CHECK: Safe. event_q Account
     #[account(mut)]
-    pub serum_asks: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub market_event_queue: UncheckedAccount<'info>,
+    /// CHECK: Safe. coin_vault Account
     #[account(mut)]
-    pub serum_event_queue: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub market_coin_vault: UncheckedAccount<'info>,
+    /// CHECK: Safe. pc_vault Account
     #[account(mut)]
-    pub serum_coin_vault_account: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub market_pc_vault: UncheckedAccount<'info>,
+    /// CHECK: Safe. vault_signer Account
     #[account(mut)]
-    pub serum_pc_vault_account: AccountInfo<'info>,
-    /// CHECK: Safe
-    pub serum_vault_signer: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub market_vault_signer: UncheckedAccount<'info>,
+    /// CHECK: Safe. user source token Account. user Account to swap from.
     #[account(mut)]
-    pub user_source_token_account: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub user_token_source: UncheckedAccount<'info>,
+    /// CHECK: Safe. user destination token Account. user Account to swap to.
     #[account(mut)]
-    pub user_destination_token_account: AccountInfo<'info>,
+    pub user_token_destination: UncheckedAccount<'info>,
+    /// CHECK: Safe. user owner Account
+    #[account(mut)]
     pub user_source_owner: Signer<'info>,
-    /// CHECK: Safe
-    #[account(address = spl_token::ID)]
-    pub spl_token_program: AccountInfo<'info>,
+    /// CHECK: Safe. The spl token program
+    pub token_program: Program<'info, Token>,
 }
 
 impl<'a, 'b, 'c, 'info> From<&mut ProxySwapBaseOut<'info>>
@@ -66,21 +70,20 @@ impl<'a, 'b, 'c, 'info> From<&mut ProxySwapBaseOut<'info>>
             amm: accounts.amm.clone(),
             amm_authority: accounts.amm_authority.clone(),
             amm_open_orders: accounts.amm_open_orders.clone(),
-            amm_target_orders: accounts.amm_target_orders.clone(),
-            pool_coin_token_account: accounts.pool_coin_token_account.clone(),
-            pool_pc_token_account: accounts.pool_pc_token_account.clone(),
-            serum_program: accounts.serum_program.clone(),
-            serum_market: accounts.serum_market.clone(),
-            serum_bids: accounts.serum_bids.clone(),
-            serum_asks: accounts.serum_asks.clone(),
-            serum_event_queue: accounts.serum_event_queue.clone(),
-            serum_coin_vault_account: accounts.serum_coin_vault_account.clone(),
-            serum_pc_vault_account: accounts.serum_pc_vault_account.clone(),
-            serum_vault_signer: accounts.serum_vault_signer.clone(),
-            user_source_token_account: accounts.user_source_token_account.clone(),
-            user_destination_token_account: accounts.user_destination_token_account.clone(),
-            user_source_owner: accounts.user_source_owner.to_account_info().clone(),
-            spl_token_program: accounts.spl_token_program.clone(),
+            amm_coin_vault: accounts.amm_coin_vault.clone(),
+            amm_pc_vault: accounts.amm_pc_vault.clone(),
+            market_program: accounts.market_program.clone(),
+            market: accounts.market.clone(),
+            market_bids: accounts.market_bids.clone(),
+            market_asks: accounts.market_asks.clone(),
+            market_event_queue: accounts.market_event_queue.clone(),
+            market_coin_vault: accounts.market_coin_vault.clone(),
+            market_pc_vault: accounts.market_pc_vault.clone(),
+            market_vault_signer: accounts.market_vault_signer.clone(),
+            user_token_source: accounts.user_token_source.clone(),
+            user_token_destination: accounts.user_token_destination.clone(),
+            user_source_owner: accounts.user_source_owner.clone(),
+            token_program: accounts.token_program.clone(),
         };
         let cpi_program = accounts.amm_program.clone();
         CpiContext::new(cpi_program, cpi_accounts)

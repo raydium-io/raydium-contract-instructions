@@ -1,46 +1,53 @@
 use amm_anchor::Deposit;
 use anchor_lang::prelude::*;
+use anchor_spl::token::Token;
 
 #[derive(Accounts, Clone)]
 pub struct ProxyDeposit<'info> {
     /// CHECK: Safe
     pub amm_program: AccountInfo<'info>,
-    /// CHECK: Safe
+    /// CHECK: Safe. Amm Account
     #[account(mut)]
-    pub amm: AccountInfo<'info>,
-    /// CHECK: Safe
-    pub amm_authority: AccountInfo<'info>,
-    /// CHECK: Safe
-    pub amm_open_orders: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub amm: UncheckedAccount<'info>,
+    /// CHECK: Safe. Amm authority, a PDA create with seed = [b"amm authority"]
+    #[account(
+        seeds = [b"amm authority"],
+        bump,
+    )]
+    pub amm_authority: UncheckedAccount<'info>,
+    /// CHECK: Safe. AMM open_orders Account.
     #[account(mut)]
-    pub amm_target_orders: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub amm_open_orders: UncheckedAccount<'info>,
+    /// CHECK: Safe. AMM target orders account. To store plan orders infomations.
     #[account(mut)]
-    pub lp_mint: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub amm_target_orders: UncheckedAccount<'info>,
+    /// CHECK: Safe. LP mint account. Must be empty, owned by $authority.
     #[account(mut)]
-    pub pool_coin_token_account: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub amm_lp_mint: UncheckedAccount<'info>,
+    /// CHECK: Safe. amm_coin_vault account, $authority can transfer amount.
     #[account(mut)]
-    pub pool_pc_token_account: AccountInfo<'info>,
-    /// CHECK: Safe
-    pub serum_market: AccountInfo<'info>,
-    /// CHECK: Safe
-    pub serum_event_queue: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub amm_coin_vault: UncheckedAccount<'info>,
+    /// CHECK: Safe. amm_pc_vault account, $authority can transfer amount.
     #[account(mut)]
-    pub user_coin_token_account: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub amm_pc_vault: UncheckedAccount<'info>,
+    /// CHECK: Safe. OpenBook market account, OpenBook program is the owner.
+    pub market: UncheckedAccount<'info>,
+    /// CHECK: Safe. OpenBook market event queue account, OpenBook program is the owner.
+    pub market_event_queue: UncheckedAccount<'info>,
+    /// CHECK: Safe. User token coin to deposit into.
     #[account(mut)]
-    pub user_pc_token_account: AccountInfo<'info>,
-    /// CHECK: Safe
+    pub user_token_coin: UncheckedAccount<'info>,
+    /// CHECK: Safe. User token pc to deposit into.
     #[account(mut)]
-    pub user_lp_token_account: AccountInfo<'info>,
+    pub user_token_pc: UncheckedAccount<'info>,
+    /// CHECK: Safe. User lp token, to deposit the generated tokens, user is the owner
+    #[account(mut)]
+    pub user_token_lp: UncheckedAccount<'info>,
+    /// CHECK: Safe. User wallet account
+    #[account(mut)]
     pub user_owner: Signer<'info>,
-    /// CHECK: Safe
-    #[account(address = spl_token::ID)]
-    pub spl_token_program: AccountInfo<'info>,
+    /// CHECK: Safe. The spl token program
+    pub token_program: Program<'info, Token>,
 }
 
 impl<'a, 'b, 'c, 'info> From<&mut ProxyDeposit<'info>>
@@ -52,16 +59,16 @@ impl<'a, 'b, 'c, 'info> From<&mut ProxyDeposit<'info>>
             amm_authority: accounts.amm_authority.clone(),
             amm_open_orders: accounts.amm_open_orders.clone(),
             amm_target_orders: accounts.amm_target_orders.clone(),
-            lp_mint: accounts.lp_mint.clone(),
-            pool_coin_token_account: accounts.pool_coin_token_account.clone(),
-            pool_pc_token_account: accounts.pool_pc_token_account.clone(),
-            serum_market: accounts.serum_market.clone(),
-            serum_event_queue: accounts.serum_event_queue.clone(),
-            user_coin_token_account: accounts.user_coin_token_account.clone(),
-            user_pc_token_account: accounts.user_pc_token_account.clone(),
-            user_lp_token_account: accounts.user_lp_token_account.clone(),
-            user_owner: accounts.user_owner.to_account_info().clone(),
-            spl_token_program: accounts.spl_token_program.clone(),
+            amm_lp_mint: accounts.amm_lp_mint.clone(),
+            amm_coin_vault: accounts.amm_coin_vault.clone(),
+            amm_pc_vault: accounts.amm_pc_vault.clone(),
+            market: accounts.market.clone(),
+            market_event_queue: accounts.market_event_queue.clone(),
+            user_token_coin: accounts.user_token_coin.clone(),
+            user_token_pc: accounts.user_token_pc.clone(),
+            user_token_lp: accounts.user_token_lp.clone(),
+            user_owner: accounts.user_owner.clone(),
+            token_program: accounts.token_program.clone(),
         };
         let cpi_program = accounts.amm_program.clone();
         CpiContext::new(cpi_program, cpi_accounts)
