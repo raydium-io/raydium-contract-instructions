@@ -452,7 +452,7 @@ export async function createMarket({
       fromPubkey: wallet.publicKey,
       newAccountPubkey: requestQueue.publicKey,
       lamports: await connection.getMinimumBalanceForRentExemption(5120 + 12),
-      space: 640 + 12,
+      space: 5120 + 12,
       programId: dexProgram,
     }),
     SystemProgram.createAccount({

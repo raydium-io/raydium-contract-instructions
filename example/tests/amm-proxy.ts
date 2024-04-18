@@ -1,6 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import {
+  ComputeBudgetProgram,
   Keypair,
   PublicKey,
   SystemProgram,
@@ -151,6 +152,9 @@ describe("amm-proxy", () => {
         systemProgram: SystemProgram.programId,
         sysvarRent: SYSVAR_RENT_PUBKEY,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitLimit({ units: 1400000 }),
+      ])
       .rpc(confirmOptions);
     console.log("initialize tx: ", tx);
 

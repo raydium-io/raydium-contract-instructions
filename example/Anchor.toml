@@ -8,8 +8,22 @@ amm_proxy = "DZWNFCeULDmofBEEknDbeq4w2J3oxXyvFKW6kG1L5Kt5"
 url = "https://github.com/raydium-io/raydium-contract-instructions"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+
+[test.validator]
+url = "https://api.devnet.solana.com"
+
+
+[[test.validator.clone]]
+address = "EoTcMgcDRTJVZDMZWBoU6rhYHZfkNTVEAfz3uUJRcYGj"
+[[test.validator.clone]]
+address = "HWy1jotHpo6UqeQxx49dpYYdQB8wj9Qk9MdxwjLvDHB8"
+[[test.validator.clone]]
+address = "3XMrhbv989VxAMi3DErLV9eJht1pHppW5LbKxe9fkEFR"
+[[test.validator.clone]]
+address = "8QN9yfKqWDoKjvZmqFsgCzAqwZBQuzVVnC388dN5RCPo"
