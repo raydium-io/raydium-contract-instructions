@@ -35,7 +35,7 @@ const globalInfo = {
 };
 
 const confirmOptions = {
-  skipPreflight: true,
+  skipPreflight: false,
 };
 
 describe("amm-proxy", () => {
@@ -61,8 +61,6 @@ describe("amm-proxy", () => {
       dexProgram: globalInfo.marketProgram,
       market: globalInfo.market,
     });
-    // wait for transaction success
-    sleep(60000);
 
     // get serum market info
     const market = await getMarket(

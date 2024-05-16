@@ -619,9 +619,10 @@ export async function sendSignedTransaction({
     }
   );
 
-  console.log("txid:", txid);
-  await sleep(timeout);
-  console.log("Latency", txid, getUnixTs() - startTime);
+  console.log("txid %s, confirming...", txid);
+  await connection.confirmTransaction(txid);
+  console.log("confirmed after %s s", getUnixTs() - startTime);
+
   return txid;
 }
 
