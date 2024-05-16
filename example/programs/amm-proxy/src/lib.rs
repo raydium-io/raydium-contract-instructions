@@ -3,7 +3,7 @@ use instructions::*;
 
 pub mod instructions;
 
-declare_id!("DZWNFCeULDmofBEEknDbeq4w2J3oxXyvFKW6kG1L5Kt5");
+declare_id!("9c542kXPuasaQU3YHHbNxRe5azpvMfVKqFxbgQ69UkBC");
 
 #[program]
 pub mod amm_proxy {
